@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 
 app = Flask(__name__)
 
@@ -29,6 +29,11 @@ ORDERS = [{
 @app.route("/")
 def html_redirect():
   return render_template('home.html', orders=ORDERS)
+
+
+@app.route("/api/orders")
+def list_jobs():
+  return jsonify(ORDERS)
 
 
 if __name__ == "__main__":
