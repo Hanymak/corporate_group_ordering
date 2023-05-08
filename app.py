@@ -1,34 +1,41 @@
 from flask import Flask, render_template, jsonify
+from database import engine
+from sqlalchemy import text
 
 app = Flask(__name__)
 
-ORDERS = [{
-  'restaurant_logo': 'pic',
-  'order_number': '1',
-  'restaurant_name': 'Dahan',
-  'order_date': '18-10-2022',
-  'order_owner': 'Hany',
-  'order_status': 'Paid'
-}, {
-  'restaurant_logo': 'pic2',
-  'order_number': '2',
-  'restaurant_name': 'Dahan2',
-  'order_date': '18-08-2022',
-  'order_owner': 'Amr',
-  'order_status': 'Paid'
-}, {
-  'restaurant_logo': 'pic',
-  'order_number': '3',
-  'restaurant_name': 'Dahan3',
-  'order_date': '18-05-2022',
-  'order_owner': 'Eslam',
-  'order_status': 'Paid'
-}]
 
+
+def load_orders_from_db():
+  with engine.connect() as conn:
+    result = conn.execution_options(stream_results=True).execute(text("select * from orders"))
+    result_all = result.all()
+    column_names = result.keys() 
+    orders = []
+    for idx, r in enumerate(result_all):
+      orders.append(dict(zip(column_names, r)))
+  
+
+  return orders
+
+def load_users_from_db():
+  with engine.connect() as conn:
+    result = conn.execution_options(stream_results=True).execute(text("select * from users"))
+    result_all = result.all()
+    column_names = result.keys() 
+    users = []
+    for idx, r in enumerate(result_all):
+      users.append(dict(zip(column_names, r)))
+  return users
 
 @app.route("/")
 def html_redirect():
-  return render_template('home.html', orders=ORDERS)
+  orders_from_db=load_orders_from_db()
+  users_from_db=load_users_from_db()
+  sheet_balance=sum(sub['user_balance'] for sub in users_from_db)
+  return render_template('home.html', orders=orders_from_db,
+                                      sheet_balance=sheet_balance,
+                                      users=users_from_db)
 
 
 @app.route("/api/orders")
