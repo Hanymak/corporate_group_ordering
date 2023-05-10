@@ -93,51 +93,105 @@
         <h1 class="modal-title fs-5" id="exampleModalLabel">Transfer Money</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
+
+
+      
       <div class="modal-body">
 
         
 
 <form>
-  Transfer from :
-  <select id="mySelect">
-
+  
+  <label>Transfer from :
+  <select name="selectBox1"  id="mySelect" onchange="myrem();">
+<option value="" disabled selected>Select your option</option>
         {% for user in users %}
 
-      <option value="user">{{user['user_name']}}</option>
+      <option value="user" >{{user['user_name']}}</option>
         
      
     {% endfor %}
 
   </select>
+  </label>
+</form>
+<form style="margin-top : 5%;">
+  
+  <label>Transfer to :
+  <select name="selectBox2"  id="myhSelect"  >
+<option value="" disabled selected>Select your option</option>
+        {% for user in users %}
+
+      <option value="user" >{{user['user_name']}}</option>
+        
+     
+    {% endfor %}
+
+  </select>
+  </label>
 </form>
 
-<script>
+<!-- <script>
 function myFunction() {
   
 let buttonVal = document.getElementById("mySelect").value;
 document.getElementById('btnTxt').innerHTML = buttonVal;
   
 }
+</script> -->
+
+<script>
+var prev_idx=x.selectedIndex;
+  var prev_value=prev_value;
+  function myrem() {
+
+    // alert(x);
+// alert(prev_idx);
+    if(prev_idx !== undefined){
+      // alert(prev_idx);
+      var y = document.getElementById("myhSelect");
+      var c = document.createElement("option");
+      c.text=prev_value;
+      y.options.add(c,prev_idx); 
+
+    }
+    var x = document.getElementById("mySelect");
+    var y = document.getElementById("myhSelect");
+
+    y.remove(x.selectedIndex);
+    prev_idx = x.selectedIndex;
+    prev_value = document.getElementById("mySelect").options[x.selectedIndex].text; 
+    // alert(prev_idx);
+
+}
+
 </script>
 
 
-<form style="margin-top : 5%;">
-  Transfer to :
-  <select id="mySelect">
 
-        {% for user in users %}
-
-      <option value="user">{{user['user_name']}}</option>
-        
-     
-    {% endfor %}
-
-  </select>
-</form>
-
-        
-        
       </div>
+
+<container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
+<div class="input-group mb-3">
+  <span class="input-group-text">$</span>
+  <input type="number" required id="salary" name="salary" class="form-control" aria-label="Amount (to the nearest dollar)">
+  <span class="input-group-text">.00</span>
+</div>
+
+
+
+<div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+  <span class="input-group-text">Transfer Reason</span>
+  <textarea class="form-control" aria-label="With textarea"></textarea>
+</div>
+
+
+</container>
+
+
+
+      
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary">Transfer</button>
