@@ -87,6 +87,14 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "pytz"
+version = "2023.3"
+description = "World timezone definitions, modern and historical"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "sqlalchemy"
 version = "2.0.12"
 description = "Database Abstraction Library"
@@ -146,7 +154,7 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "c18ad771c8a0302ffccc6ce0bb489f4573dc987000231ee7ea5ea492b78a2405"
+content-hash = "672c9216e5287d08966a702824ec0d9b23ab4634f8e8d5edd8e8e8be9311c099"
 
 [metadata.files]
 blinker = []
@@ -157,6 +165,7 @@ greenlet = []
 itsdangerous = []
 jinja2 = []
 markupsafe = []
+pytz = []
 sqlalchemy = []
 typing-extensions = []
 werkzeug = []

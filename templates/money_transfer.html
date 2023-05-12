@@ -1,0 +1,115 @@
+			<!-- Modal -->
+			<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h1 class="modal-title fs-5" id="exampleModalLabel">Transfer Money</h1>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+						</div>
+
+
+
+
+						<div class="modal-body">
+        
+
+<form action="/money_transfer"  method="post">
+  
+  <label>Transfer from :
+  <select required  name="from_user" id="selectBox1" onchange="remove_duplicate_selection();" >
+<option value="" disabled selected>Select your option</option>
+        {% for user in users %}
+
+      <option value="{{user['user_name']}}" >{{user['user_name']}}</option>
+        
+     
+    {% endfor %}
+
+  </select>
+  </label>
+
+  
+  <label style="margin-top:5%;">Transfer to :
+  <select name="to_user" id="selectBox2"  required >
+<option value="" disabled selected>Select your option</option>
+    {% for user in users %}
+
+      <option value="{{user['user_name']}}" > {{user['user_name']}} </option>
+        
+     
+    {% endfor %}
+
+  </select>
+    
+  </label>
+
+  <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
+<div class="input-group mb-3">
+  <span class="input-group-text">$</span>
+  <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount" class="form-control" aria-label="Amount (to the nearest dollar)">
+  <span class="input-group-text">.00</span>
+</div>
+
+
+
+<div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+  <span  class="input-group-text">Transfer Reason</span>
+  <textarea maxlength = 50 name="transfer_reason" required  class="form-control" aria-label="With textarea"></textarea>
+</div>
+
+
+</container>
+
+
+<!-- name = "transfer" value="Transfer" -->
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit"  class="btn btn-primary">Transfer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</form>
+
+<!-- <script>
+function myFunction() {
+  
+let buttonVal = document.getElementById("mySelect").value;
+document.getElementById('btnTxt').innerHTML = buttonVal;
+  
+}
+</script> -->
+
+<script>
+var prev_idx=x.selectedIndex;
+  var prev_value=prev_value;
+  function remove_duplicate_selection() {
+
+    // alert(x);
+// alert(prev_idx);
+    if(prev_idx !== undefined){
+      // alert(prev_idx);
+      var y = document.getElementById("selectBox2");
+      var c = document.createElement("option");
+      c.text=prev_value;
+      y.options.add(c,prev_idx); 
+      document.getElementById("selectBox2").selectedIndex = "0"; 
+
+    }
+    var x = document.getElementById("selectBox1");
+    var y = document.getElementById("selectBox2");
+
+    y.remove(x.selectedIndex);
+    prev_idx = x.selectedIndex;
+    prev_value = document.getElementById("selectBox1").options[x.selectedIndex].text; 
+    // alert(prev_idx);
+
+}
+
+</script>
+
+
+						</div>
+					</div>
