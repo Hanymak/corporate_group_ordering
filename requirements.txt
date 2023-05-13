@@ -3,3 +3,11 @@ gunicorn
 sqlalchemy
 pymysql
 pytz
+wtforms
+dnspython
+bcrypt
+flask-wtf
+flask-sqlalchemy
+flask-login
+flask-bcrypt
+email-validator
