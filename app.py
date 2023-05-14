@@ -1,10 +1,10 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for
-from database import engine, add_transfered_balance_to_user_db, balance_recharge_to_user_db
+from flask import Flask, flash, render_template, jsonify, request, redirect, url_for
+from database import engine, add_transfered_balance_to_user_db, balance_recharge_to_user_db, db_connection_string
 from sqlalchemy import text
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, EmailField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
 
@@ -12,7 +12,7 @@ app = Flask(__name__)
 # create the extension
 # db = SQLAlchemy()
 # configure the SQLite database, relative to the app instance folder
-app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///database.db'
+app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///db_2.db'
 app.config['SECRET_KEY'] = 'thisisasecretkey'
 # initialize the app with the extension
 db = SQLAlchemy(app)
@@ -31,6 +31,8 @@ def load_user(user_id):
 class User(db.Model, UserMixin):
   id = db.Column(db.Integer, primary_key=True)
   username = db.Column(db.String(20), nullable=False, unique=True)
+  phonenumber = db.Column(db.String(20), nullable=False, unique=True)
+  email = db.Column(db.String(20), nullable=False, unique=True)
   password = db.Column(db.String(80), nullable=False)
 
 
@@ -38,6 +40,14 @@ class RegisterForm(FlaskForm):
   username = StringField(validators=[InputRequired(),
                                      Length(min=4, max=20)],
                          render_kw={"placeholder": "Username"})
+
+  email = EmailField(validators=[InputRequired(),
+                                 Length(min=4, max=20)],
+                     render_kw={"placeholder": "Email"})
+
+  phonenumber = StringField(
+    validators=[InputRequired(), Length(min=4, max=20)],
+    render_kw={"placeholder": "phonenumber"})
 
   password = PasswordField(validators=[InputRequired(),
                                        Length(min=8, max=20)],
@@ -52,12 +62,21 @@ class RegisterForm(FlaskForm):
       raise ValidationError(
         'That username already exists. Please choose a different one.')
 
+  def validate_username(self, email):
+    existing_user_email = User.query.filter_by(email=email.data).first()
+    if existing_user_email:
+      raise ValidationError(
+        'That email already exists. Please choose a different one.')
+
 
 class LoginForm(FlaskForm):
-  username = StringField(validators=[InputRequired(),
-                                     Length(min=4, max=20)],
-                         render_kw={"placeholder": "Username"})
+  # username = StringField(validators=[InputRequired(),
+  #                                    Length(min=4, max=20)],
+  #                        render_kw={"placeholder": "Username"})
 
+  email = EmailField(validators=[InputRequired(),
+                                 Length(min=4, max=20)],
+                     render_kw={"placeholder": "Email"})
   password = PasswordField(validators=[InputRequired(),
                                        Length(min=8, max=20)],
                            render_kw={"placeholder": "Password"})
@@ -160,16 +179,18 @@ def list_jobs():
 
 @app.route("/", methods=['GET', 'POST'])
 def login():
-  form = LoginForm()
-  if form.validate_on_submit():
-    user = User.query.filter_by(username=form.username.data).first()
-    if user:
-      if bcrypt.check_password_hash(user.password, form.password.data):
-        # flash('You have been automatically logged out')
-        login_user(user)
-        return redirect(url_for('home'))
+  if request.method == "POST":
 
-  return render_template('login.html', form=form)
+    user = User.query.filter_by(email=request.form['email']).first()
+    if user:
+      if bcrypt.check_password_hash(user.password, request.form['password']):
+        login_user(user)
+        flash('You were logged in')
+        return redirect(url_for('home'))
+      # else:
+      #   db.session['user_id'] = user.id  # makes more sense than storing just a bool
+  form = LoginForm(request.form)
+  return render_template('login_main.html', form=form)
 
 
 @app.route("/logout", methods=['GET', 'POST'])
@@ -183,12 +204,19 @@ def logout():
 @app.route("/registration", methods=['GET', 'POST'])
 def registration():
   form = RegisterForm()
-  if form.validate_on_submit():
-    hashed_password = bcrypt.generate_password_hash(form.password.data)
-    new_user = User(username=form.username.data, password=hashed_password)
-    db.session.add(new_user)
-    db.session.commit()
-    return redirect(url_for('login'))
+  if request.method == "POST":
+    hashed_password = bcrypt.generate_password_hash(request.form['password'])
+    if bcrypt.check_password_hash(hashed_password,
+                                  request.form['confirmpassword']):
+      print("hello world Hany Makhlouf password compare")
+      new_user = User(username=request.form['name'],
+                      phonenumber=request.form['phonenumber'],
+                      email=request.form['email'],
+                      password=hashed_password)
+      db.session.add(new_user)
+      db.session.commit()
+      return redirect(url_for('login'))
+
   return render_template('registration.html', form=form)
 
 
