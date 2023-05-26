@@ -90,6 +90,7 @@ class User(db.Model, UserMixin):
   user_email = db.Column(db.String(50), nullable=False, unique=True)
   user_password = db.Column(db.String(80), nullable=False)
   user_balance = db.Column(db.Numeric(10,2), nullable=False , default= 0)
+  user_volt_balance = db.Column(db.Numeric(10,2), default= 0)
   user_admin = db.Column(db.Boolean, default=False)
   user_active = db.Column(db.Boolean, default=True)
   
@@ -335,7 +336,8 @@ def registration():
           mail.send(msg)
           
           # session['data'] = new_user
-          return redirect(url_for('login'))
+          
+          return redirect(url_for('registration_complete'))
           # return redirect(f'/verify_email/{token}')
         else :
           flash("Passwords Don't Match")
@@ -426,13 +428,14 @@ def reset_password(token):
         return render_template('reset_password.html')
 
     except SignatureExpired:
-        return render_template('reset_password_expired.html')
+        return 'Reset Password Expired'
     except BadSignature:
-        return render_template('reset_password_invalid.html')
+        return 'Reset Password Invalid'
 
 
-
-
+@app.route('/registration_complete')
+def registration_complete():
+  return render_template('registration_complete.html')
 
 
 
