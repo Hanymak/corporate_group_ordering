@@ -10,7 +10,7 @@ engine = create_engine(db_connection_string,
                          "ssl_ca": "/etc/ssl/cert.pem"
                        }})
 
-
+# print(engine)
 def add_transfered_balance_to_user_db(transaction):
   # getting the current time in UTC timezone
   now_utc = datetime.now(timezone('UTC'))

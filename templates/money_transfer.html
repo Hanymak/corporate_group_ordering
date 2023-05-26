@@ -16,26 +16,37 @@
 <form action="/money_transfer"  method="post">
   
   <label>Transfer from :
+     {% if currentUser['user_admin']%}
   <select required  name="from_user" id="selectBox1" onchange="remove_duplicate_selection();" >
 <option value="" disabled selected>Select your option</option>
         {% for user in users %}
 
       <option value="{{user['user_name']}}" >{{user['user_name']}}</option>
-        
+     
      
     {% endfor %}
-
+    {% else %} 
+      <select name="from_user" id="selectBox1" >
+<option value="{{currentUser['user_name']}}" selected>{{currentUser['user_name']}}</option>
+    {% endif %}   
   </select>
+
   </label>
 
   
   <label style="margin-top:5%;">Transfer to :
-  <select name="to_user" id="selectBox2"  required >
+   
+    <select name="to_user" id="selectBox2"  required >
+  
 <option value="" disabled selected>Select your option</option>
     {% for user in users %}
-
+      {% if currentUser['user_admin'] %}
+            <option value="{{user['user_name']}}" > {{user['user_name']}} </option>
+      {% else %}
+        {% if user['user_name'] != currentUser['user_name'] %}
       <option value="{{user['user_name']}}" > {{user['user_name']}} </option>
-        
+      {% endif %}
+      {% endif %}  
      
     {% endfor %}
 
@@ -73,14 +84,18 @@
 
 </form>
 
-<!-- <script>
-function myFunction() {
+<script>
+function remove_user() {
   
-let buttonVal = document.getElementById("mySelect").value;
-document.getElementById('btnTxt').innerHTML = buttonVal;
+var selectobject = document.getElementById("selectBox2");
+for (var i=0; i<selectobject.length; i++) {
+    print(currentUser["user_name"])
+    if (selectobject.options[i].value == currentUser)
+        selectobject.remove(i);
+}
   
 }
-</script> -->
+</script>
 
 <script>
 var prev_idx=x.selectedIndex;

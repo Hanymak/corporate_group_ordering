@@ -23,24 +23,37 @@
             <div class="u-shadow-v21 g-bg-white rounded g-py-40 g-px-30">
       <form class="px-4 py-3"  method="POST" action="">
         <div class="mb-3">
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  <strong>{{ message }}!</strong> You should check in on some of those fields below.
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
+          
           <label for="exampleDropdownFormName1" class="form-label">Name</label>
-          <input type="text"  name="name" class="form-control" id="exampleDropdownFormName1" placeholder="i.e Mohamed Essam">
+          <input type="text" required minlength="4" maxlength="20" name="name" class="form-control" id="exampleDropdownFormName1" placeholder="i.e Mohamed Essam">
         </div>
         <div class="mb-3">
           <label for="exampleDropdownFormEmail1" class="form-label">Email address</label>
-          <input type="email"  name="email" class="form-control" id="exampleDropdownFormEmail1" placeholder="email@example.com">
+          <input type="email" required minlength="4" maxlength="50" name="email" class="form-control" id="exampleDropdownFormEmail1" placeholder="email@example.com">
         </div>
         <div class="mb-3">
           <label for="exampleDropdownFormNumber1" class="form-label">Phone Number</label>
-          <input type="text"  name="phonenumber" class="form-control" id="exampleDropdownFormNumber1" placeholder="i.e 00201234567891">
+          <input type="text" required  minlength="11" maxlength="20" name="phonenumber" class="form-control" id="exampleDropdownFormNumber1" placeholder="i.e 00201234567891">
         </div>
         <div class="mb-3">
           <label for="exampleDropdownFormPassword1" class="form-label">Password</label>
-          <input type="password"  name="password" class="form-control" id="exampleDropdownFormPassword1" placeholder="Password">
+          <input type="password" required minlength="8" maxlength="20"  name="password" class="form-control" id="exampleDropdownFormPassword1" placeholder="Password">
         </div>
         <div class="mb-3">
           <label for="exampleDropdownFormPassword2" class="form-label">Confirm Password</label>
-          <input type="password"  name="confirmpassword" class="form-control" id="exampleDropdownFormPassword2" placeholder="Confirm Password">
+          <input type="password" required minlength="8" maxlength="20" name="confirmpassword" class="form-control" id="exampleDropdownFormPassword2" placeholder="Confirm Password">
         </div>
         <!-- <div class="mb-3">
           <div class="form-check">

@@ -78,10 +78,12 @@
 
 							{% include 'money_transfer.html' %}
 
-
+{% if currentUser['user_admin'] %}
 					<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal1"">Balance Recharge</button>
-          {% include 'balance_recharge.html' %}
 
+
+          {% include 'balance_recharge.html' %}
+      {% endif %}
 					<!-- <button type="button" class="btn btn-lg btn-danger" data-bs-toggle="popover' data-bs-title="Popover title" data-bs-content="And here's some amazing content. It's very engaging. Right?">Transfer Money
 					</button> -->
 
@@ -92,7 +94,7 @@
 			<div class="row align-items-start ">
 				<div class="col">
 
-					<p class="text-center fs-2  list-group-item list-group-item-primary p-3 " style="color:white; border-radius: 50px 15px;margin-top : 8%;margin-left:20%;border-top: 5px solid lightgreen;background-color: #adb5bd  ;">My Balance:5000</p>
+					<p class="text-center fs-2  list-group-item list-group-item-primary p-3 " style="color:white; border-radius: 50px 15px;margin-top : 8%;margin-left:20%;border-top: 5px solid lightgreen;background-color: #adb5bd  ;">My Balance:{{currentUser['user_balance']}}</p>
 				</div>
 				<div class="col" >
 					<p class="text-center fs-2  list-group-item list-group-item-info p-3" style="color:white;border-radius: 15px 50px;margin-top : 8%;margin-right:20%;border-top: 5px solid lightgreen;background-color: #adb5bd  ;"> Sheet Balance:{{sheet_balance}} </p>

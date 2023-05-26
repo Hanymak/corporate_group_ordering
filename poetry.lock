@@ -81,6 +81,18 @@ Flask = ">=1.0.4"
 Werkzeug = ">=1.0.1"
 
 [[package]]
+name = "flask-mail"
+version = "0.9.1"
+description = "Flask extension for sending email"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+blinker = "*"
+Flask = "*"
+
+[[package]]
 name = "flask-sqlalchemy"
 version = "3.0.3"
 description = "Add SQLAlchemy support to your Flask application."
@@ -232,7 +244,7 @@ email = ["email-validator"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "06f70946c4add12397c88f821b86c3783f84b085accf595031b1a84d248422da"
+content-hash = "a95564d4ed36f38d285e53c44eed9927661bea3e48477ad98b72948dd0788dd4"
 
 [metadata.files]
 bcrypt = []
@@ -242,6 +254,7 @@ colorama = []
 flask = []
 flask-bcrypt = []
 flask-login = []
+flask-mail = []
 flask-sqlalchemy = []
 flask-wtf = []
 greenlet = []

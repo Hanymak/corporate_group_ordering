@@ -11,3 +11,4 @@ flask-sqlalchemy
 flask-login
 flask-bcrypt
 email-validator
+flask-mail
