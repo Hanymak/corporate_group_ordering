@@ -1,0 +1,64 @@
+			<!-- Modal -->
+			<div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel2" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h1 class="modal-title fs-5" id="exampleModalLabel2">Create Order</h1>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+						</div>
+
+
+
+
+						<div class="modal-body">
+        
+
+<form action="/create_order"  method="post">
+  
+  
+  <label style="margin-top:5%;">Transfer to :
+  <select name="restaurant_name" id="selectBox2" required >
+<option value="" disabled selected>Select Restaurant</option>
+    {% for restaurant in restaurants %}
+
+      <option value="{{restaurant['name']}}" > {{restaurant['name']}} </option>
+        
+     
+    {% endfor %}
+
+  </select>
+    
+  </label>
+
+  <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
+
+<div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+  <span  class="input-group-text">Order Will Arrive At</span>
+  <textarea maxlength = 50 name="dining_room" required  class="form-control" aria-label="With textarea"></textarea>
+</div>
+
+<div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+  <span  class="input-group-text">You Will Order Within</span>
+  <textarea maxlength = 50 name="time_to_order" required  class="form-control" aria-label="With textarea"></textarea>
+</div>
+
+</container>
+
+
+<!-- name = "transfer" value="Transfer" -->
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit"  class="btn btn-primary">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</form>
+
+
+
+
+						</div>
+					</div>

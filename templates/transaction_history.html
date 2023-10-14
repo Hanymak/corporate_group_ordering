@@ -72,31 +72,31 @@ th {
     <tr>
       <th scope="row">{{transaction['id']}}</th>
       <td>    
-        {% if transaction['transaction_from_user'] %} 
-          {{ transaction['transaction_from_user'] }} 
+        {% if transaction['from_user'] %} 
+          {{ transaction['from_user'] }} 
         {% else %}
           -
         {% endif %}
       </td>
-      <td>    {{transaction['transaction_to_user']}}</td>
-      <td>    {{transaction['transaction_amount']}}</td>
-      <td>    {{transaction['transaction_reason']}}</td>
+      <td>    {{transaction['to_user']}}</td>
+      <td>    {{transaction['amount']}}</td>
+      <td>    {{transaction['reason']}}</td>
       <td>
-        {% if transaction['transaction_from_user_balance_before'] != None %} 
-          {{transaction['transaction_from_user_balance_before']}} / {{transaction['transaction_to_user_balance_before']}}
+        {% if transaction['from_user_balance_before'] != None %} 
+          {{transaction['from_user_balance_before']}} / {{transaction['to_user_balance_before']}}
         {% else %}
-          - / {{transaction['transaction_to_user_balance_before']}}
+          - / {{transaction['to_user_balance_before']}}
         {% endif %}
         </td>
       <td>    
-        {% if transaction['transaction_from_user_balance_after'] != None %} 
-          {{transaction['transaction_from_user_balance_after']}} / {{transaction['transaction_to_user_balance_after']}}
+        {% if transaction['from_user_balance_after'] != None %} 
+          {{transaction['from_user_balance_after']}} / {{transaction['to_user_balance_after']}}
         {% else %}
-          - / {{transaction['transaction_to_user_balance_after']}}
+          - / {{transaction['to_user_balance_after']}}
         {% endif %}
         </td>
-      <td>    {{transaction['transaction_performed_by']}}</td>
-      <td>    {{transaction['transaction_date']}}</td>
+      <td>    {{transaction['performed_by']}}</td>
+      <td>    {{transaction['date']}}</td>
     </tr>
     {% endfor %}
   </tbody>

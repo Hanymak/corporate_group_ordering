@@ -1,0 +1,67 @@
+			<!-- Modal -->
+			<div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h1 class="modal-title fs-5" id="exampleModalLabel">Add New Item</h1>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+						</div>
+
+
+
+
+						<div class="modal-body">
+        
+
+<form action="{{url_for('order_sheet',id=id)}}"  method="post">
+  
+
+  
+
+  <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
+  <label>Item Name:  </label>
+
+    <div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+  <textarea maxlength = 50 name="itemName" required  class="form-control" aria-label="With textarea"></textarea>
+</div>
+
+  <label>Item Description:  </label>
+
+    <div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+  <textarea maxlength = 50 name="itemDescription" required  class="form-control" aria-label="With textarea"></textarea>
+</div>
+<div class="input-group mb-3">
+  <label>Item Price:  </label>
+      <div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+  <span class="input-group-text">$</span>
+  <input type="number" step=".01" min=0 max=9999.99 required id="salary" name="itemPrice" class="form-control" aria-label="Amount (to the nearest dollar)">
+  <span class="input-group-text">.00</span>
+      </div>
+</div>
+
+
+
+
+
+
+</container>
+
+
+<!-- name = "transfer" value="Transfer" -->
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" name ="action" value="addMenuItem" class="btn btn-primary">Add Menu Item</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</form>
+
+
+
+
+
+						</div>
+					</div>

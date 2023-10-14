@@ -1,0 +1,65 @@
+			<!-- Modal -->
+			<div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h1 class="modal-title fs-5" id="exampleModalLabel">Update Item Price</h1>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+						</div>
+
+
+
+
+						<div class="modal-body">
+        
+
+<form action="{{url_for('order_sheet',id=id)}}"  method="post">
+  
+  <label>Menu Items :
+  <select required  name="menuitem" id="selectBox2" >
+<option value="" disabled selected>Select your option</option>
+        {% for menuitem in menuitems %}
+
+      <option class="dropdown-item" value="{{menuitem['description']}}" >    {{menuitem['description']}}  {{ menuitem['price'] }}</option>
+     
+     
+    {% endfor %}
+  </select>
+
+  </label>
+
+  
+
+  <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
+<div class="input-group mb-3">
+  <span class="input-group-text">$</span>
+  <input type="number" step=".01" min=0 max=9999.99 required id="salary" name="item_new_price" class="form-control" aria-label="Amount (to the nearest dollar)">
+  <span class="input-group-text">.00</span>
+</div>
+
+
+
+
+
+
+</container>
+
+
+<!-- name = "transfer" value="Transfer" -->
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" name ="action" value="updateItemPrice" class="btn btn-primary">Update </button>
+      </form>
+</div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+						</div>
+					</div>

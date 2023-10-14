@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
+    <title>Transaction </title>
+      {% include 'icon.html' %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<style>
+  body {
+  min-height: 100vh;
+  position: relative;
+  margin: 0;
+  padding-bottom: 100px; //height of the footer
+  box-sizing: border-box;
+}
+
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 80%;
+  height: 100px;
+}
+
+/* table {
+  text-align: left;
+  position: relative;
+}
+
+th {
+  background-color:#FF0000
+  background: white;
+  position: sticky;
+  top: 0;
+}
+  
+  #managerTable {
+    max-height: 500px;
+    overflow: auto;
+} */
+  
+</style>
+  
+  </head>
+  
+  <body class="" >
+{% include 'navbar.html' %}
+   <content >
+
+
+      <div class="button-container">
+       <div class=" d-flex justify-content-center gap-2"  style="margin-top: 2% ;">
+       <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal"  >
+         Add/Modify Your Order
+       </button>
+       {% include 'add_order.html' %}
+       <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal1"  >
+         Add Menu Item
+       </button>
+       {% include 'add_menu_item.html' %}
+       <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal2"  >
+         Update Item Price
+       </button>
+       {% include 'update_item_price.html' %}
+       </div>
+      </div>
+
+
+     
+
+<table  class="table  mx-10 col-lg-4 mx-auto  container  justify-content-center  border-0 bd-example ">
+  <thead>
+    <tr>
+      <th scope="col"></th>
+      {% for menuitem in menuitems_uniqueorders %}
+        <th scope="col">{{menuitem['description']}} <br> {{menuitem['price']}}</th>
+
+      {% endfor %}
+      <th scope="col">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user, user_items_cost in zipped_data %}
+    <tr>
+      <th scope="row">{{user['name']}}</th>
+      {% for menuitem in menuitems_uniqueorders %}
+        <td>    
+              {% set break = false%}
+              {% set item_total_cost = 0 %}
+              {% for order in orderitems if not break %}
+                
+                {% if user['id'] == order['user_id'] and menuitem['id'] == order['menuitem_id'] %}     
+                  {{order['quantity']}}
+                  {% set break = true%}          
+                {% else %}
+                {% endif %}
+              {%endfor%}
+              
+              {% if not break %}
+                <!-- 0 need to be checked most probale that this loop is entered more than one time -->
+              {% endif %}
+        
+        </td>
+      {% endfor %}
+        <td>{{user_items_cost}}</td>
+    </tr>
+    {% endfor %}
+    <th scope="row" style="color: red;">Summary</th>
+    {% for menu_item_quantity in menu_items_quantity %}
+      <td style="color: red;">{{menu_item_quantity}}</td>
+    {% endfor %}
+    <td style="color: red;">{{order_cost}}</td>
+  </tbody>
+</table>
+
+  </div>
+
+</content>
+  {% include 'footer.html' %}
+</body>
+
+</html>
