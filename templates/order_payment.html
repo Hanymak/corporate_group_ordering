@@ -1,0 +1,44 @@
+
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Pay Order</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+      </div>
+
+
+
+
+      <div class="modal-body">
+
+
+        <form action="{{url_for('order_sheet',id=id)}}"  method="post">
+
+          <label>Wallet :
+            <select required  name="user_name" id="selectBox1" >
+            <option value="" disabled selected>Select your option</option>
+            {% for user in users %}
+              {% if(user.admin) %}
+                <option class="dropdown-item" value="{{ user['name'] }}">
+                {{ user['name'] }} Vault
+                </option>
+              {%endif%}
+            {% endfor %}
+            </select>
+
+          </label>
+
+          <!-- name = "transfer" value="Transfer" -->
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" name ="action" value="payOrder" class="btn btn-primary">Pay</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

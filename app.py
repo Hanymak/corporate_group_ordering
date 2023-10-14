@@ -277,6 +277,7 @@ def order_sheet(id):
   users = load_all_users()
   orderitems = OrderItem.query.filter_by(order_id=id).all()
   order = Orders.query.filter_by(id=id).first()
+  order_status = order.status
   restaurant_id = order.restaurant_id
   menuitems_restaurant = MenuItem.query.filter_by(
     restaurant_id=restaurant_id).all()
@@ -308,7 +309,7 @@ def order_sheet(id):
   for menu_item_quantity in menuitems_inorder:
     item_quantity = OrderItem.query.filter_by(menuitem_id=menu_item_quantity.id, order_id=id).all()
     menu_items_quantity.append(sum(sub.quantity for sub in item_quantity))
-  print(menu_items_quantity)
+  # print(menu_items_quantity)
 
 
   menuitems_uniqueorders = menuitems_inorder
@@ -368,7 +369,24 @@ def order_sheet(id):
       db.session.add(new_menuitem)
       db.session.commit()
       return redirect(url_for('order_sheet', id=id))
+    elif action == "payOrder":
+      data = request.form
+      order = Orders.query.filter_by(id=id).first()
+      order.total_charge = order_cost
+      order.status = "Paid"
+      for user,cost in zip(users_inorder,users_items_cost):
+        user.balance = float(user.balance) - float(cost)
+      user_vault_paid = User.query.filter_by(name=data['user_name']).first()
+      user_vault_paid.volt_balance = float(user_vault_paid.volt_balance) - float(order_cost)
+      db.session.commit()
+      return redirect(url_for('order_sheet', id=id))
+    elif action == "closeOrder":
+      order = Orders.query.filter_by(id=id).first()
+      order.status = "Closed"
+      db.session.commit()
+      return redirect(url_for('order_sheet', id=id))
   zipped_data = zip(orderitems_uniqueusers, users_items_cost)
+  users = load_all_users()
   return render_template('order_sheet.html',
                          menuitems_uniqueorders=menuitems_uniqueorders,
                          orderitems_uniqueusers=orderitems_uniqueusers,
@@ -378,6 +396,8 @@ def order_sheet(id):
                          users_items_cost=users_items_cost,
                          zipped_data=zipped_data,
                          order_cost=order_cost,
+                         order_status=order_status,
+                         users=users,
                          id=id)
 
 
