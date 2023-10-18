@@ -11,120 +11,119 @@
 
 
 						<div class="modal-body">
-        
-
-<form action="/money_transfer"  method="post">
-  
-  <label>Transfer from :
-     {% if currentUser['admin']%}
-  <select required  name="from_user" id="selectBox1" onchange="remove_duplicate_selection();" >
-<option value="" disabled selected>Select your option</option>
-        {% for user in users %}
-
-      <option value="{{user['name']}}" >{{user['name']}}</option>
-     
-     
-    {% endfor %}
-    {% else %} 
-      <select name="from_user" id="selectBox1" >
-<option value="{{currentUser['name']}}" selected>{{currentUser['name']}}</option>
-    {% endif %}   
-  </select>
-
-  </label>
-
-  
-  <label style="margin-top:5%;">Transfer to :
-   
-    <select name="to_user" id="selectBox2"  required >
-  
-<option value="" disabled selected>Select your option</option>
-    {% for user in users %}
-      {% if currentUser['admin'] %}
-            <option value="{{user['name']}}" > {{user['name']}} </option>
-      {% else %}
-        {% if user['name'] != currentUser['name'] %}
-      <option value="{{user['name']}}" > {{user['name']}} </option>
-      {% endif %}
-      {% endif %}  
-     
-    {% endfor %}
-
-  </select>
-    
-  </label>
-
-  <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
-<div class="input-group mb-3">
-  <span class="input-group-text">$</span>
-  <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount" class="form-control" aria-label="Amount (to the nearest dollar)">
-  <span class="input-group-text">.00</span>
-</div>
 
 
+              <form action="/money_transfer"  method="post">
 
-<div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
-  <span  class="input-group-text">Transfer Reason</span>
-  <textarea maxlength = 50 name="transfer_reason" required  class="form-control" aria-label="With textarea"></textarea>
-</div>
+                <label>Transfer from :
+                 {% if currentUser['admin']%}
+                 <select required  name="from_user" id="selectBox1" onchange="remove_duplicate_selection();" >
+                  <option value="" disabled selected>Select your option</option>
+                  {% for user in users %}
+
+                  <option value="{{user['name']}}" >{{user['name']}}</option>
 
 
-</container>
+                  {% endfor %}
+                  {% else %} 
+                  <select name="from_user" id="selectBox1" >
+                    <option value="{{currentUser['name']}}" selected>{{currentUser['name']}}</option>
+                    {% endif %}   
+                  </select>
+
+                </label>
 
 
-<!-- name = "transfer" value="Transfer" -->
-      
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit"  class="btn btn-primary">Transfer</button>
-      </div>
-    </div>
-  </div>
-</div>
+                <label style="margin-top:5%;">Transfer to :
 
-</form>
+                  <select name="to_user" id="selectBox2"  required >
 
-<script>
-function remove_user() {
-  
-var selectobject = document.getElementById("selectBox2");
-for (var i=0; i<selectobject.length; i++) {
-    print(currentUser["name"])
-    if (selectobject.options[i].value == currentUser)
-        selectobject.remove(i);
-}
-  
-}
-</script>
+                    <option value="" disabled selected>Select your option</option>
+                    {% for user in users %}
+                    {% if currentUser['admin'] %}
+                    <option value="{{user['name']}}" > {{user['name']}} </option>
+                    {% else %}
+                    {% if user['name'] != currentUser['name'] %}
+                    <option value="{{user['name']}}" > {{user['name']}} </option>
+                    {% endif %}
+                    {% endif %}  
 
-<script>
-var prev_idx=x.selectedIndex;
-  var prev_value=prev_value;
-  function remove_duplicate_selection() {
+                    {% endfor %}
+
+                  </select>
+
+                </label>
+
+                <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
+                  <div class="input-group mb-3">
+                    <span class="input-group-text">$</span>
+                    <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount" class="form-control" aria-label="Amount (to the nearest dollar)">
+                    <span class="input-group-text">.00</span>
+                  </div>
+
+
+
+                  <div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+                    <span  class="input-group-text">Transfer Reason</span>
+                    <textarea maxlength = 50 name="transfer_reason" required  class="form-control" aria-label="With textarea"></textarea>
+                  </div>
+
+
+                </container>
+
+
+                <!-- name = "transfer" value="Transfer" -->
+
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="submit"  class="btn btn-primary">Transfer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+
+          <script>
+            function remove_user() {
+
+              var selectobject = document.getElementById("selectBox2");
+              for (var i=0; i<selectobject.length; i++) {
+                print(currentUser["name"])
+                if (selectobject.options[i].value == currentUser)
+                  selectobject.remove(i);
+              }
+
+            }
+          </script>
+
+          <script>
+            var prev_idx=x.selectedIndex;
+            var prev_value=prev_value;
+            function remove_duplicate_selection() {
 
     // alert(x);
 // alert(prev_idx);
-    if(prev_idx !== undefined){
+              if(prev_idx !== undefined){
       // alert(prev_idx);
-      var y = document.getElementById("selectBox2");
-      var c = document.createElement("option");
-      c.text=prev_value;
-      y.options.add(c,prev_idx); 
-      document.getElementById("selectBox2").selectedIndex = "0"; 
+                var y = document.getElementById("selectBox2");
+                var c = document.createElement("option");
+                c.text=prev_value;
+                y.options.add(c,prev_idx); 
+                document.getElementById("selectBox2").selectedIndex = "0"; 
 
-    }
-    var x = document.getElementById("selectBox1");
-    var y = document.getElementById("selectBox2");
+              }
+              var x = document.getElementById("selectBox1");
+              var y = document.getElementById("selectBox2");
 
-    y.remove(x.selectedIndex);
-    prev_idx = x.selectedIndex;
-    prev_value = document.getElementById("selectBox1").options[x.selectedIndex].text; 
+              y.remove(x.selectedIndex);
+              prev_idx = x.selectedIndex;
+              prev_value = document.getElementById("selectBox1").options[x.selectedIndex].text; 
     // alert(prev_idx);
 
-}
+            }
 
-</script>
+          </script>
 
 
-						</div>
-					</div>
+        </div>
+      </div>

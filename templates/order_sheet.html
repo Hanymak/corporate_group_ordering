@@ -50,6 +50,18 @@ th {
   <body class="" >
 {% include 'navbar.html' %}
    <content >
+     <ol class="list-group" style="margin-left:15%;margin-right:15%;">
+       <li class="list-group-item d-flex justify-content-between align-items-start">
+         <div class="ms-2 me-auto">
+
+           <div class="fw-bold">
+             Restaurant Name: {{order_restaurant_name}} 
+           </div>
+           Order Owner: {{order_owner}}<br>
+           <!-- {{order_date}} -->
+         </div>
+         <span class="badge bg-primary rounded-pill">Order Status: {{order_status}}</span>
+       </li>
 
       <div class="button-container">
        <div class=" d-flex justify-content-center gap-2"  style="margin-top: 2% ;">
@@ -65,23 +77,30 @@ th {
           Update Item Price
         </button>
        {% include 'update_item_price.html' %}
-        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal3"  >
+        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal3"  >
           Pay Order
         </button>
         {% include 'order_payment.html' %}
-       <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal4"  >
-          Order Arrived
-       </button>
-         {% include 'order_payment.html' %}
+          <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
+           <button  type="submit" name ="action" value="orderArrived" class="btn btn-success btn-sm" >
+             Order Arrived
+           </button>
+         </form>
+
        <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
-        <button  type="submit" name ="action" value="closeOrder" class="btn btn-primary btn-sm" >
+        <button  type="submit" name ="action" value="closeOrder" class="btn btn-warning btn-sm" >
           Close Order
         </button>
+      </form>
+          <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
+           <button  type="submit" name ="action" value="cancelOrder" class="btn btn-danger btn-sm" >
+             Cancel Order
+           </button>
          </form>
-        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal6"  >
+         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal6"  >
           Add College Order
         </button>
-         {% include 'order_payment.html' %}
+         {% include 'add_college_order.html' %}
        </div>
       </div>
 

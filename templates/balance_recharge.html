@@ -1,63 +1,57 @@
-			<!-- Modal -->
-			<div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel1" aria-hidden="true">
-				<div class="modal-dialog modal-dialog-centered">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h1 class="modal-title fs-5" id="exampleModalLabel1">Balance Recharge</h1>
-							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
-						</div>
+      <!-- Modal -->
+      <div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel1">Balance Recharge</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+            </div>
 
 
 
 
-						<div class="modal-body">
-        
-
-<form action="/balance_recharge"  method="post">
-  
-  
-  <label style="margin-top:5%;">Transfer to :
-  <select name="to_user" id="selectBox2" required >
-<option value="" disabled selected>Select your option</option>
-    {% for user in users %}
-
-      <option value="{{user['name']}}" > {{user['name']}} </option>
-        
-     
-    {% endfor %}
-
-  </select>
-    
-  </label>
-
-  <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
-<div class="input-group mb-3">
-  <span class="input-group-text">$</span>
-  <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount" class="form-control" aria-label="Amount (to the nearest dollar)">
-  <span class="input-group-text">.00</span>
-</div>
-<div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
-  <span  class="input-group-text">Transfer Reason</span>
-  <textarea maxlength = 50 name="transfer_reason" required  class="form-control" aria-label="With textarea"></textarea>
-</div>
-
-</container>
+            <div class="modal-body">
 
 
-<!-- name = "transfer" value="Transfer" -->
-      
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit"  class="btn btn-primary">Recharge</button>
+              <form action="/balance_recharge"  method="post">
+
+
+                <label style="margin-top:5%;">Transfer to :
+                  <select name="to_user" id="selectBox2" required >
+                    <option value="" disabled selected>Select your option</option>
+                    {% for user in users %}
+
+                    <option value="{{user['name']}}" > {{user['name']}} </option>
+
+
+                    {% endfor %}
+
+                  </select>
+
+                </label>
+
+                <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
+                  <div class="input-group mb-3">
+                    <span class="input-group-text">$</span>
+                    <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount" class="form-control" aria-label="Amount (to the nearest dollar)">
+                    <span class="input-group-text">.00</span>
+                  </div>
+                  <div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+                    <span  class="input-group-text">Transfer Reason</span>
+                    <textarea maxlength = 50 name="transfer_reason" required  class="form-control" aria-label="With textarea"></textarea>
+                  </div>
+
+                </container>
+
+
+                <!-- name = "transfer" value="Transfer" -->
+
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="submit"  class="btn btn-primary">Recharge</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
-
-</form>
-
-
-
-
-						</div>
-					</div>

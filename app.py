@@ -148,7 +148,7 @@ class OrderItem(db.Model):
   order_id = db.Column(db.Integer, nullable=False)
   menuitem_id = db.Column(db.Integer, nullable=False)
   user_id = db.Column(db.Integer, nullable=False)
-  quantity = db.Column(db.Integer, nullable=False)
+  quantity = db.Column(db.Numeric(10, 2), nullable=False)
 
 
 with app.app_context():
@@ -204,16 +204,25 @@ def load_transactions_from_db():
 @app.route("/home", methods=['GET', 'POST'])
 @login_required
 def home():
+  order_restaurant_name = []
   orders_from_db = load_orders_from_db()
   restaurant_from_db = load_all_restaurants()
   users_from_db = load_all_users()
   sheet_balance = sum(sub.balance for sub in users_from_db)
+  orders_restaurant_id = [order["restaurant_id"] for order in orders_from_db]
+  for order_restaurant_id in orders_restaurant_id:
+    order_restaurant_name.append(
+      Restaurant.query.filter_by(id=order_restaurant_id).first())
+  # print(order_restaurant_name)
+  # print(orders_from_db)
+  zipped_data = zip(orders_from_db, order_restaurant_name)
   return render_template('home.html',
                          orders=orders_from_db,
                          sheet_balance=sheet_balance,
                          users=users_from_db,
                          currentUser=current_user,
-                         restaurants=restaurant_from_db)
+                         restaurants=restaurant_from_db,
+                         zipped_data=zipped_data)
 
 
 #this function populates the transaction history
@@ -281,10 +290,13 @@ def order_sheet(id):
   restaurant_id = order.restaurant_id
   menuitems_restaurant = MenuItem.query.filter_by(
     restaurant_id=restaurant_id).all()
+  order_restaurant_name = menuitems_restaurant[0].name
+  order_owner = order.owner
+
   # print(menuitems)
   # print(orderitems.user_id)
   users_inorder = []
-  menuitems_inorder=[]
+  menuitems_inorder = []
   menu_items_quantity = []
   user_item_cost = []
   users_items_cost = []
@@ -298,7 +310,9 @@ def order_sheet(id):
       user_item_cost.append(
         MenuItem.query.filter_by(id=user_item.menuitem_id).first())
 
-    users_items_cost.append(sum(sub.price * user_item.quantity for sub, user_item in zip(user_item_cost,user_items)))
+    users_items_cost.append(
+      sum(sub.price * user_item.quantity
+          for sub, user_item in zip(user_item_cost, user_items)))
     user_item_cost = []
   order_cost = sum(users_items_cost)
   for menuitem_inorder in orderitems:
@@ -307,10 +321,10 @@ def order_sheet(id):
     if menuitems not in menuitems_inorder:
       menuitems_inorder.append(menuitems)
   for menu_item_quantity in menuitems_inorder:
-    item_quantity = OrderItem.query.filter_by(menuitem_id=menu_item_quantity.id, order_id=id).all()
+    item_quantity = OrderItem.query.filter_by(
+      menuitem_id=menu_item_quantity.id, order_id=id).all()
     menu_items_quantity.append(sum(sub.quantity for sub in item_quantity))
   # print(menu_items_quantity)
-
 
   menuitems_uniqueorders = menuitems_inorder
   orderitems_uniqueusers = users_inorder
@@ -324,6 +338,7 @@ def order_sheet(id):
 
       data = request.form
       menuitem = MenuItem.query.filter_by(description=data['menuitem']).first()
+
       orderitems = OrderItem.query.filter_by(order_id=id)
       user_exists_inorder = orderitems.filter_by(user_id=current_user.id)
       if (user_exists_inorder):
@@ -374,10 +389,11 @@ def order_sheet(id):
       order = Orders.query.filter_by(id=id).first()
       order.total_charge = order_cost
       order.status = "Paid"
-      for user,cost in zip(users_inorder,users_items_cost):
+      for user, cost in zip(users_inorder, users_items_cost):
         user.balance = float(user.balance) - float(cost)
       user_vault_paid = User.query.filter_by(name=data['user_name']).first()
-      user_vault_paid.volt_balance = float(user_vault_paid.volt_balance) - float(order_cost)
+      user_vault_paid.volt_balance = float(
+        user_vault_paid.volt_balance) - float(order_cost)
       db.session.commit()
       return redirect(url_for('order_sheet', id=id))
     elif action == "closeOrder":
@@ -385,6 +401,47 @@ def order_sheet(id):
       order.status = "Closed"
       db.session.commit()
       return redirect(url_for('order_sheet', id=id))
+    elif action == "orderArrived":
+      order = Orders.query.filter_by(id=id).first()
+      order.status = "Arrived"
+      db.session.commit()
+      return redirect(url_for('order_sheet', id=id))
+    elif action == "cancelOrder":
+      order = Orders.query.filter_by(id=id).first()
+      order.status = "Canceled"
+      db.session.commit()
+      return redirect(url_for('order_sheet', id=id))
+    elif action == "addCollegeOrder":
+
+      data = request.form
+      college = User.query.filter_by(name=data['user']).first()
+      menuitem = MenuItem.query.filter_by(description=data['menuitem']).first()
+      orderitems = OrderItem.query.filter_by(order_id=id)
+      user_exists_inorder = orderitems.filter_by(user_id=college.id)
+      if (user_exists_inorder):
+        order_already_exists_inorder = orderitems.filter_by(
+          user_id=college.id, menuitem_id=menuitem.id).first()
+        if (order_already_exists_inorder):
+          if float(data['quantity']) == 0:
+            # print('hello word not delete')
+            db.session.delete(order_already_exists_inorder)
+          else:
+            order_already_exists_inorder.quantity = float(data['quantity'])
+          db.session.commit()
+
+        else:
+          if (float(data['quantity']) == 0):
+            flash("Item does not already exist")
+          else:
+            new_orderitem = OrderItem(order_id=id,
+                                      menuitem_id=menuitem.id,
+                                      user_id=college.id,
+                                      quantity=data['quantity'])
+            db.session.add(new_orderitem)
+            db.session.commit()
+        # if (data['menuitem'] == orderitems[])
+      return redirect(url_for('order_sheet', id=id))
+
   zipped_data = zip(orderitems_uniqueusers, users_items_cost)
   users = load_all_users()
   return render_template('order_sheet.html',
@@ -398,6 +455,8 @@ def order_sheet(id):
                          order_cost=order_cost,
                          order_status=order_status,
                          users=users,
+                         order_restaurant_name=order_restaurant_name,
+                         order_owner=order_owner,
                          id=id)
 
 
