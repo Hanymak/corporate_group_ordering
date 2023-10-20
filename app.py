@@ -116,6 +116,7 @@ class Restaurant(db.Model):
   name = db.Column(db.String(100), nullable=False)
   address = db.Column(db.String(200), nullable=False)
   contact_info = db.Column(db.String(100), nullable=False)
+  icon = db.Column(db.BLOB, nullable=True)
 
 
 # Menu class
@@ -200,6 +201,26 @@ def load_transactions_from_db():
       transactions.append(dict(zip(column_names, r)))
   return transactions
 
+@app.route("/order_history", methods=['GET', 'POST'])
+@login_required
+def orders_history():
+  order_restaurant_name = []
+  orders_from_db = load_orders_from_db()
+  restaurant_from_db = load_all_restaurants()
+  users_from_db = load_all_users()
+  sheet_balance = sum(sub.balance for sub in users_from_db)
+  orders_restaurant_id = [order["restaurant_id"] for order in orders_from_db]
+  for order_restaurant_id in orders_restaurant_id:
+    order_restaurant_name.append(
+      Restaurant.query.filter_by(id=order_restaurant_id).first())
+  # print(order_restaurant_name)
+  # print(orders_from_db)
+  zipped_data = zip(orders_from_db, order_restaurant_name)
+  return render_template('order_history.html',
+                         orders=orders_from_db,
+                         currentUser=current_user,
+                         restaurants=restaurant_from_db,
+                         zipped_data=zipped_data)
 
 @app.route("/home", methods=['GET', 'POST'])
 @login_required
@@ -286,12 +307,13 @@ def order_sheet(id):
   users = load_all_users()
   orderitems = OrderItem.query.filter_by(order_id=id).all()
   order = Orders.query.filter_by(id=id).first()
-  order_status = order.status
   restaurant_id = order.restaurant_id
   menuitems_restaurant = MenuItem.query.filter_by(
     restaurant_id=restaurant_id).all()
-  order_restaurant_name = menuitems_restaurant[0].name
+  order_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
   order_owner = order.owner
+  order_status = order.status
+  delivery_cost = order.delivery
 
   # print(menuitems)
   # print(orderitems.user_id)
@@ -311,10 +333,14 @@ def order_sheet(id):
         MenuItem.query.filter_by(id=user_item.menuitem_id).first())
 
     users_items_cost.append(
-      sum(sub.price * user_item.quantity
+      sum(sub.price * float(user_item.quantity)
           for sub, user_item in zip(user_item_cost, user_items)))
     user_item_cost = []
-  order_cost = sum(users_items_cost)
+  
+  if(order_status == 'Paid'):
+    order_cost = sum(users_items_cost) +  float(order.delivery)
+  else:
+    order_cost = sum(users_items_cost)
   for menuitem_inorder in orderitems:
     menuitems = MenuItem.query.filter_by(
       id=menuitem_inorder.menuitem_id).first()
@@ -323,7 +349,8 @@ def order_sheet(id):
   for menu_item_quantity in menuitems_inorder:
     item_quantity = OrderItem.query.filter_by(
       menuitem_id=menu_item_quantity.id, order_id=id).all()
-    menu_items_quantity.append(sum(sub.quantity for sub in item_quantity))
+    menu_items_quantity.append(
+      sum(float(sub.quantity) for sub in item_quantity))
   # print(menu_items_quantity)
 
   menuitems_uniqueorders = menuitems_inorder
@@ -387,13 +414,16 @@ def order_sheet(id):
     elif action == "payOrder":
       data = request.form
       order = Orders.query.filter_by(id=id).first()
-      order.total_charge = order_cost
       order.status = "Paid"
+      order.delivery = float(data['delivery_fees'])
+      order.total_charge = order_cost + float(data['delivery_fees'])
+      delivery_per_user="{:.2f}".format(float(data['delivery_fees'])/len(users_inorder))
       for user, cost in zip(users_inorder, users_items_cost):
-        user.balance = float(user.balance) - float(cost)
+        user.balance = float(user.balance) - float(cost) - float(delivery_per_user)
+        print(delivery_per_user)
       user_vault_paid = User.query.filter_by(name=data['user_name']).first()
       user_vault_paid.volt_balance = float(
-        user_vault_paid.volt_balance) - float(order_cost)
+        user_vault_paid.volt_balance) - float(order_cost) - float(data['delivery_fees'])
       db.session.commit()
       return redirect(url_for('order_sheet', id=id))
     elif action == "closeOrder":
@@ -443,6 +473,8 @@ def order_sheet(id):
       return redirect(url_for('order_sheet', id=id))
 
   zipped_data = zip(orderitems_uniqueusers, users_items_cost)
+  zipped_data1 = zip(menuitems_uniqueorders, menu_items_quantity)
+
   users = load_all_users()
   return render_template('order_sheet.html',
                          menuitems_uniqueorders=menuitems_uniqueorders,
@@ -452,11 +484,13 @@ def order_sheet(id):
                          menu_items_quantity=menu_items_quantity,
                          users_items_cost=users_items_cost,
                          zipped_data=zipped_data,
+                         zipped_data1=zipped_data1,
                          order_cost=order_cost,
-                         order_status=order_status,
                          users=users,
-                         order_restaurant_name=order_restaurant_name,
+                         order_status=order_status,
                          order_owner=order_owner,
+                         order_restaurant=order_restaurant,
+                         delivery_cost=delivery_cost,
                          id=id)
 
 

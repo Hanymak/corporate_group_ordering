@@ -30,9 +30,18 @@
             </select>
 
           </label>
-
+          <br>
+          <br>
+          <label> Delivery fees : 
+          <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
+            <div class="input-group mb-3">
+              <span class="input-group-text">$</span>
+              <input type="number" step=".01" min=0 max=9999.99 required id="salary" name="delivery_fees" class="  form-control"          aria-label="Amount (to the nearest dollar)">
+              <span class="input-group-text">.00</span>
+            </div>      
+          </container>
           <!-- name = "transfer" value="Transfer" -->
-
+             </label>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="submit" name ="action" value="payOrder" class="btn btn-primary">Pay</button>
