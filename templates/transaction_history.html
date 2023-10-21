@@ -68,7 +68,7 @@ th {
     </tr>
   </thead>
   <tbody>
-    {% for transaction in transactions %}
+    {% for transaction in transactions|reverse %}
     <tr>
       <th scope="row">{{transaction['id']}}</th>
       <td>    
@@ -78,19 +78,28 @@ th {
           -
         {% endif %}
       </td>
-      <td>    {{transaction['to_user']}}</td>
+      <td>    {% if transaction['to_user'] %} 
+                {{transaction['to_user']}}
+              {% else %}
+                -
+              {% endif %}
+      </td>
       <td>    {{transaction['amount']}}</td>
       <td>    {{transaction['reason']}}</td>
       <td>
-        {% if transaction['from_user_balance_before'] != None %} 
+        {% if transaction['from_user_balance_before'] != None and transaction['to_user_balance_before'] != None %} 
           {{transaction['from_user_balance_before']}} / {{transaction['to_user_balance_before']}}
+        {%elif transaction['from_user_balance_before'] != None%}
+          {{transaction['from_user_balance_before']}} / -
         {% else %}
           - / {{transaction['to_user_balance_before']}}
         {% endif %}
         </td>
       <td>    
-        {% if transaction['from_user_balance_after'] != None %} 
+        {% if transaction['from_user_balance_after'] != None and transaction['to_user_balance_after'] != None %} 
           {{transaction['from_user_balance_after']}} / {{transaction['to_user_balance_after']}}
+        {% elif transaction['from_user_balance_after'] != None%}
+        {{transaction['from_user_balance_after']}} / -
         {% else %}
           - / {{transaction['to_user_balance_after']}}
         {% endif %}

@@ -1,5 +1,6 @@
 { pkgs }: {
   deps = [
+    pkgs.systemdMinimal
     pkgs.sqlite.bin
     pkgs.mailutils
     pkgs.python310Full

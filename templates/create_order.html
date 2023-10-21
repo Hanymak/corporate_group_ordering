@@ -17,11 +17,11 @@
 
 
                 <label style="margin-top:5%;">Transfer to :
-                  <select name="restaurant_name" id="selectBox2" required >
+                  <select name="restaurant_name" id="selectBox1" required >
                     <option value="" disabled selected>Select Restaurant</option>
                     {% for restaurant in restaurants %}
 
-                    <option value="{{restaurant['name']}}" > {{restaurant['name']}} </option>
+                    <option class="dropdown-item" value="{{restaurant['name']}}" > {{restaurant['name']}} </option>
 
 
                     {% endfor %}

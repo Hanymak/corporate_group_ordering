@@ -60,7 +60,7 @@ th {
          <div class="card-header">
            Order Info 
            {% if order_status == "Open" %}
-           <span class="badge bg-primary rounded-pill" style="float:right;">Order Status: {{order_status}}</span>
+           <span class="badge bg-primary rounded-pill" style="float:right;">Order Status:    {{order_status}}</span>
            {% elif order_status == "Closed" %}
            <span class="badge bg-warning rounded-pill" style="float:right;">Order Status:
            {{order_status}}</span>
@@ -80,6 +80,9 @@ th {
       </div>
       </div>
     </div>
+    
+    {%if order_status != "Paid" and order_status != "Canceled"%}
+    {%if order_status != "Closed"%}
     <div class="button-container">
       <div class=" d-flex justify-content-center gap-2"  style="margin-top: 2% ;">
     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal"  >
@@ -94,30 +97,37 @@ th {
       Update Item Price
     </button>
     {% include 'update_item_price.html' %}
+        {%if current_user['name'] == order_owner or current_user['admin'] == 1 %}
         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal6"  >
         Add College Order
         </button>
         {% include 'add_college_order.html' %}
+        {% endif %}
       </div>
     </div>
+    {% endif %}
+    {%if current_user['name'] == order_owner or current_user['admin'] == 1 %}
     <div class="button-container">
       <div class=" d-flex justify-content-center gap-2"  style="margin-top: 2% ;">
         <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal3"  >
       Pay Order
     </button>
     {% include 'order_payment.html' %}
+        {%if order_status != "Arrived"%}
     <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
      <button  type="submit" name ="action" value="orderArrived" class="btn btn-success btn-sm" >
        Order Arrived
      </button>
     </form>
-
+    {% endif %}
+        {%if order_status != "Closed"%}
     <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
      <button  type="submit" name ="action" value="closeOrder" class="btn btn-warning btn-sm" >
       Close Order
      </button>
     </form>
     <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
+      {%endif%}
      <button  type="submit" name ="action" value="cancelOrder" class="btn btn-danger btn-sm" >
      Cancel Order
      </button>
@@ -125,10 +135,11 @@ th {
 
       </div>
     </div>
+    {%endif%}
+  {%endif%}
 
 
-
-<table  class="table  mx-10 col-lg-4 mx-auto  container  justify-content-center  border-0 bd-example table-striped">
+<table  class="table  mx-10 col-lg-4 mx-auto  container  justify-content-center  border-0 bd-example table-striped ">
   <thead>
     <tr>
       <th scope="col"></th>

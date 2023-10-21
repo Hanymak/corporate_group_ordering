@@ -12,3 +12,4 @@ flask-login
 flask-bcrypt
 email-validator
 flask-mail
+pyTelegramBotAPI

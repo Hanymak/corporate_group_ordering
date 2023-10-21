@@ -19,6 +19,22 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "certifi"
+version = "2023.7.22"
+description = "Python package for providing Mozilla's CA Bundle."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "charset-normalizer"
+version = "3.3.0"
+description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
+category = "main"
+optional = false
+python-versions = ">=3.7.0"
+
+[[package]]
 name = "click"
 version = "8.1.3"
 description = "Composable command line interface toolkit"
@@ -133,6 +149,14 @@ docs = ["sphinx", "docutils (<0.18)"]
 test = ["objgraph", "psutil"]
 
 [[package]]
+name = "idna"
+version = "3.4"
+description = "Internationalized Domain Names in Applications (IDNA)"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[[package]]
 name = "itsdangerous"
 version = "2.1.2"
 description = "Safely pass data to untrusted environments and back."
@@ -163,12 +187,53 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "pytelegrambotapi"
+version = "4.14.0"
+description = "Python Telegram bot api."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+requests = "*"
+
+[package.extras]
+PIL = ["pillow"]
+aiohttp = ["aiohttp"]
+aioredis = ["aioredis"]
+coloredlogs = ["coloredlogs"]
+fastapi = ["fastapi"]
+json = ["ujson"]
+psutil = ["psutil"]
+redis = ["redis (>=3.4.1)"]
+uvicorn = ["uvicorn"]
+watchdog = ["watchdog"]
+
+[[package]]
 name = "pytz"
 version = "2023.3"
 description = "World timezone definitions, modern and historical"
 category = "main"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "requests"
+version = "2.31.0"
+description = "Python HTTP for Humans."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+certifi = ">=2017.4.17"
+charset-normalizer = ">=2,<4"
+idna = ">=2.5,<4"
+urllib3 = ">=1.21.1,<3"
+
+[package.extras]
+socks = ["PySocks (>=1.5.6,!=1.5.7)"]
+use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "sqlalchemy"
@@ -206,12 +271,46 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3-binary"]
 
 [[package]]
+name = "telebot"
+version = "0.0.5"
+description = "A Telegram bot library, with simple route decorators."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pyTelegramBotAPI = "*"
+requests = "*"
+
+[[package]]
+name = "telegram"
+version = "0.0.1"
+description = "Telegram APIs"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "4.5.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
 category = "main"
 optional = false
 python-versions = ">=3.7"
+
+[[package]]
+name = "urllib3"
+version = "2.0.7"
+description = "HTTP library with thread-safe connection pooling, file post, and more."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+brotli = ["brotli (>=1.0.9)", "brotlicffi (>=0.8.0)"]
+secure = ["certifi", "cryptography (>=1.9)", "idna (>=2.0.0)", "pyopenssl (>=17.1.0)", "urllib3-secure-extra"]
+socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
+zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
 name = "werkzeug"
@@ -244,11 +343,13 @@ email = ["email-validator"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "a95564d4ed36f38d285e53c44eed9927661bea3e48477ad98b72948dd0788dd4"
+content-hash = "156b324958ac6a058fd957c545efaf18c9bc73c6daf19759d12e0d00de5daf39"
 
 [metadata.files]
 bcrypt = []
 blinker = []
+certifi = []
+charset-normalizer = []
 click = []
 colorama = []
 flask = []
@@ -258,11 +359,17 @@ flask-mail = []
 flask-sqlalchemy = []
 flask-wtf = []
 greenlet = []
+idna = []
 itsdangerous = []
 jinja2 = []
 markupsafe = []
+pytelegrambotapi = []
 pytz = []
+requests = []
 sqlalchemy = []
+telebot = []
+telegram = []
 typing-extensions = []
+urllib3 = []
 werkzeug = []
 wtforms = []

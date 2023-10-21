@@ -17,18 +17,64 @@ from flask_mail import Mail, Message
 from itsdangerous.url_safe import URLSafeTimedSerializer
 from itsdangerous import BadSignature, SignatureExpired
 import json
+import threading
+import telebot
+import sys
+import time
+from time import sleep
+#telegram API
+# Define your bot token
+# bot = telebot.TeleBot(os.environ['API_KEY'])
+import telebot
+import threading
+from time import sleep
 
-# from sqlalchemy.ext.declarative import declarative_base
-# Base = declarative_base()
+app = Flask(__name__)
+
+# BOT_TOKEN = os.environ['API_KEY']
+# BOT_INTERVAL = 3
+# BOT_TIMEOUT = 30
+
+# bot = None
+
+# def bot_polling():
+#   global bot
+#   print("Starting bot polling now")
+#   while True:
+#     try:
+#       print("New bot instance started")
+#       bot = telebot.TeleBot(BOT_TOKEN)  #Generate new bot instance
+#       botactions(
+#       )  #If bot is used as a global variable, remove bot as an input param
+#       bot.polling(none_stop=True, interval=BOT_INTERVAL, timeout=BOT_TIMEOUT)
+#     except Exception as ex:  #Error in polling
+#       print("Bot polling failed, restarting in {}sec. Error:\n{}".format(
+#         BOT_TIMEOUT, ex))
+#       bot.stop_polling()
+#       sleep(BOT_TIMEOUT)
+#     else:  #Clean exit
+#       bot.stop_polling()
+#       print("Bot polling loop finished")
+#       break  #End loop
+
+# def botactions():
+#   #Set all your bot handlers inside this function
+#   #If bot is used as a global variable, remove bot as an input param
+#   @bot.message_handler(commands=["start"])
+#   def command_start(message):
+#     bot.reply_to(message, "Hi there!")
+
+# polling_thread = threading.Thread(target=bot_polling)
+# polling_thread.daemon = True
+# polling_thread.start()
 
 db_connection_string = os.environ['DB_CONNECTION_STRING']
-app = Flask(__name__)
 
 #mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = 'tsfoodies23@gmail.com'
-app.config['MAIL_PASSWORD'] = 'wqyixcortpipnaal'
+app.config['MAIL_PASSWORD'] = os.environ['MAIL_APP_PASSWORD']
 # os.environ['EMAIL_PASSWORD']
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
@@ -201,6 +247,7 @@ def load_transactions_from_db():
       transactions.append(dict(zip(column_names, r)))
   return transactions
 
+
 @app.route("/order_history", methods=['GET', 'POST'])
 @login_required
 def orders_history():
@@ -221,6 +268,7 @@ def orders_history():
                          currentUser=current_user,
                          restaurants=restaurant_from_db,
                          zipped_data=zipped_data)
+
 
 @app.route("/home", methods=['GET', 'POST'])
 @login_required
@@ -272,16 +320,28 @@ def users_details():
   return render_template('users_details.html', users=users)
 
 
-@app.route("/create_order", methods=['get', 'post'])
+@app.route("/create_order", methods=['GET', 'POST'])
 @login_required
 def create_order():
   data = request.form
+  print(data)
   # Converting to Egypt time zone
-
   now_utc = datetime.now(timezone('UTC'))
   now_cairo = now_utc.astimezone(timezone('Africa/Cairo'))
   datetime_string = now_cairo.strftime("%d/%m/%Y %I:%M:%S")
   restaurant = Restaurant.query.filter_by(name=data['restaurant_name']).first()
+
+  users = load_all_users()
+
+  for user in users:
+    if user.id != current_user.id:
+      msg = Message("TE-Foodies Transaction",
+                    sender='noreply@tsfoodies',
+                    recipients=[user.email])
+
+      msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
+        'time_to_order'] + " mints"
+      mail.send(msg)
   new_order = Orders(restaurant_id=restaurant.id,
                      order_within_time=data['time_to_order'],
                      status='Open',
@@ -292,10 +352,22 @@ def create_order():
                      total_charge=0,
                      owner=current_user.name,
                      date=datetime_string)
-
   db.session.add(new_order)
   db.session.commit()
-  return redirect("order_sheet", new_order.id)
+  return redirect("/order_sheet/{}".format(new_order.id))
+
+
+@app.route("/create_restaurant", methods=['GET', 'POST'])
+@login_required
+def create_restaurant():
+
+  data = request.form
+  new_restaurant = Restaurant(name=data['restaurant_name'],
+                              address=data['restaurant_address'],
+                              contact_info=data['restaurant_phone'])
+  db.session.add(new_restaurant)
+  db.session.commit()
+  return redirect("home")
 
 
 @app.route("/order_sheet/<id>", methods=['GET', 'POST'])
@@ -336,9 +408,9 @@ def order_sheet(id):
       sum(sub.price * float(user_item.quantity)
           for sub, user_item in zip(user_item_cost, user_items)))
     user_item_cost = []
-  
-  if(order_status == 'Paid'):
-    order_cost = sum(users_items_cost) +  float(order.delivery)
+
+  if (order_status == 'Paid'):
+    order_cost = sum(users_items_cost) + float(order.delivery)
   else:
     order_cost = sum(users_items_cost)
   for menuitem_inorder in orderitems:
@@ -417,13 +489,42 @@ def order_sheet(id):
       order.status = "Paid"
       order.delivery = float(data['delivery_fees'])
       order.total_charge = order_cost + float(data['delivery_fees'])
-      delivery_per_user="{:.2f}".format(float(data['delivery_fees'])/len(users_inorder))
+      delivery_per_user = "{:.2f}".format(
+        float(data['delivery_fees']) / len(users_inorder))
       for user, cost in zip(users_inorder, users_items_cost):
-        user.balance = float(user.balance) - float(cost) - float(delivery_per_user)
+        user.balance = float(
+          user.balance) - float(cost) - float(delivery_per_user)
         print(delivery_per_user)
       user_vault_paid = User.query.filter_by(name=data['user_name']).first()
       user_vault_paid.volt_balance = float(
-        user_vault_paid.volt_balance) - float(order_cost) - float(data['delivery_fees'])
+        user_vault_paid.volt_balance) - float(order_cost) - float(
+          data['delivery_fees'])
+      now_utc = datetime.now(timezone('UTC'))
+      # Converting to Egypt time zone
+      now_cairo = now_utc.astimezone(timezone('Africa/Cairo'))
+      datetime_string = now_cairo.strftime("%d/%m/%Y %I:%M:%S")
+
+      for user, cost in zip(users_inorder, users_items_cost):
+        new_transaction = Transaction(
+          from_user=user.name,
+          from_user_balance_before=float(user.balance) + float(cost) +
+          float(delivery_per_user),
+          from_user_balance_after=float(user.balance),
+          amount=float(cost) + float(delivery_per_user),
+          reason="Order from " + order_restaurant.name,
+          performed_by=current_user.name,
+          date=datetime_string)
+
+        msg = Message("TE-Foodies Transaction",
+                      sender='noreply@tsfoodies',
+                      recipients=[user.email])
+        amount = -float(cost) - float(delivery_per_user)
+        msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user.name + "\n\nTransaction Amount : " + str(
+          amount
+        ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + "Order from " + order_restaurant.name + "\n\nRegards,\nTE-Foodies"
+        mail.send(msg)
+        db.session.add(new_transaction)
+
       db.session.commit()
       return redirect(url_for('order_sheet', id=id))
     elif action == "closeOrder":
@@ -766,4 +867,14 @@ def registration_complete():
 
 
 if __name__ == "__main__":
-  app.run(host='0.0.0.0', debug=True)
+  # telegram_main()
+
+  app.run(host='0.0.0.0', debug=False)
+
+  # while True:
+  #   try:
+  #     sleep(120)
+  #   except KeyboardInterrupt:
+  #     bot.stop_polling()
+  #     print("Exiting...")
+  #     sys.exit(0)
