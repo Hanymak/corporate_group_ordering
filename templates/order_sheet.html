@@ -82,7 +82,7 @@ th {
     </div>
     
     {%if order_status != "Paid" and order_status != "Canceled"%}
-    {%if order_status != "Closed"%}
+    {%if order_status != "Closed" or ( current_user['name'] == order_owner or current_user['admin'] == 1 ) %}
     <div class="button-container">
       <div class=" d-flex justify-content-center gap-2"  style="margin-top: 2% ;">
     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal"  >
@@ -106,37 +106,44 @@ th {
       </div>
     </div>
     {% endif %}
-    {%if current_user['name'] == order_owner or current_user['admin'] == 1 %}
+    {% if current_user['name'] == order_owner or current_user['admin'] == 1 %}
+
     <div class="button-container">
       <div class=" d-flex justify-content-center gap-2"  style="margin-top: 2% ;">
+        {% if order_status == "Arrived" %}
         <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal3"  >
       Pay Order
     </button>
     {% include 'order_payment.html' %}
-        {%if order_status != "Arrived"%}
+        {% endif %}
+        {% if order_status != "Arrived" %}
+        {% if order_status != "Open" %}
     <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
      <button  type="submit" name ="action" value="orderArrived" class="btn btn-success btn-sm" >
        Order Arrived
      </button>
     </form>
-    {% endif %}
+        {% endif %}
         {%if order_status != "Closed"%}
     <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
      <button  type="submit" name ="action" value="closeOrder" class="btn btn-warning btn-sm" >
       Close Order
      </button>
     </form>
-    <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
-      {%endif%}
+        {%endif%}
+
+        <form action="{{ url_for('order_sheet', id=id) }}" method="POST"> 
      <button  type="submit" name ="action" value="cancelOrder" class="btn btn-danger btn-sm" >
      Cancel Order
      </button>
     </form>
-
+        {%endif%}
       </div>
     </div>
-    {%endif%}
+
   {%endif%}
+    {%endif%}
+    
 
 
 <table  class="table  mx-10 col-lg-4 mx-auto  container  justify-content-center  border-0 bd-example table-striped ">

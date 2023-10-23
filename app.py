@@ -180,6 +180,7 @@ class Orders(db.Model):
   restaurant_id = db.Column(db.Integer, nullable=False)
   order_within_time = db.Column(db.String(20), nullable=False)
   status = db.Column(db.String(20), nullable=False)
+  dining_room = db.Column(db.String(20), nullable=True)
   charge = db.Column(db.Numeric(10, 2), nullable=False, default=0)
   taxes = db.Column(db.Numeric(10, 2), nullable=False, default=1)
   service = db.Column(db.Numeric(10, 2), nullable=False, default=1)
@@ -340,7 +341,7 @@ def create_order():
                     recipients=[user.email])
 
       msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
-        'time_to_order'] + " mints"
+        'time_to_order'] + " mints" + "\n\nRegards,\nTE-Foodies"
       mail.send(msg)
   new_order = Orders(restaurant_id=restaurant.id,
                      order_within_time=data['time_to_order'],
@@ -351,6 +352,7 @@ def create_order():
                      delivery=0,
                      total_charge=0,
                      owner=current_user.name,
+                     dining_room=data['dining_room'],
                      date=datetime_string)
   db.session.add(new_order)
   db.session.commit()
@@ -536,6 +538,15 @@ def order_sheet(id):
       order = Orders.query.filter_by(id=id).first()
       order.status = "Arrived"
       db.session.commit()
+      for user in users_inorder:
+        if user.id != current_user.id:
+          msg = Message("TE-Foodies Transaction",
+                        sender='noreply@tsfoodies',
+                        recipients=[user.email])
+
+          msg.body = "Dears,\n\nKindly be noted that your has arrived at " + order.dining_room + "\n\nRegards,\nTE-Foodies"
+          mail.send(msg)
+
       return redirect(url_for('order_sheet', id=id))
     elif action == "cancelOrder":
       order = Orders.query.filter_by(id=id).first()
