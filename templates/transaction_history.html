@@ -67,7 +67,9 @@ th {
       <th scope="col">Transfer Date and Time</th>
     </tr>
   </thead>
+  {% if transactions != None%}
   <tbody>
+
     {% for transaction in transactions|reverse %}
     <tr>
       <th scope="row">{{transaction['id']}}</th>
@@ -109,6 +111,9 @@ th {
     </tr>
     {% endfor %}
   </tbody>
+  {%else%}
+<h2>No Transaction Done Yet</h2>
+  {%endif}
 </table>
 
   </div>

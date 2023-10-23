@@ -203,18 +203,20 @@ with app.app_context():
 
   db.create_all()
 
+# def load_orders_from_db():
+#   with engine.connect() as conn:
+#     result = conn.execution_options(stream_results=True).execute(
+#       text("select * from orders"))
+#     result_all = result.all()
+#     column_names = result.keys()
+#     orders = []
+#     for idx, r in enumerate(result_all):
+#       orders.append(dict(zip(column_names, r)))
 
+
+#   return orders
 def load_orders_from_db():
-  with engine.connect() as conn:
-    result = conn.execution_options(stream_results=True).execute(
-      text("select * from orders"))
-    result_all = result.all()
-    column_names = result.keys()
-    orders = []
-    for idx, r in enumerate(result_all):
-      orders.append(dict(zip(column_names, r)))
-
-  return orders
+  return Orders.query.all()
 
 
 def load_all_users():
@@ -237,16 +239,16 @@ def load_all_transcations():
   return Transaction.query.all()
 
 
-def load_transactions_from_db():
-  with engine.connect() as conn:
-    result = conn.execution_options(stream_results=True).execute(
-      text("select * from transactions"))
-    result_all = result.all()
-    column_names = result.keys()
-    transactions = []
-    for idx, r in enumerate(result_all):
-      transactions.append(dict(zip(column_names, r)))
-  return transactions
+# def load_transactions_from_db():
+#   with engine.connect() as conn:
+#     result = conn.execution_options(stream_results=True).execute(
+#       text("select * from transactions"))
+#     result_all = result.all()
+#     column_names = result.keys()
+#     transactions = []
+#     for idx, r in enumerate(result_all):
+#       transactions.append(dict(zip(column_names, r)))
+#   return transactions
 
 
 @app.route("/order_history", methods=['GET', 'POST'])
