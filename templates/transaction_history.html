@@ -50,7 +50,6 @@ th {
    <content >
 
 
-
      
 <div  >
 <table  class="table  mx-10 col-lg-4 mx-auto  container  justify-content-center  border-0 bd-example ">
@@ -67,7 +66,7 @@ th {
       <th scope="col">Transfer Date and Time</th>
     </tr>
   </thead>
-  {% if transactions != None%}
+
   <tbody>
 
     {% for transaction in transactions|reverse %}
@@ -111,9 +110,7 @@ th {
     </tr>
     {% endfor %}
   </tbody>
-  {%else%}
-<h2>No Transaction Done Yet</h2>
-  {%endif}
+
 </table>
 
   </div>
