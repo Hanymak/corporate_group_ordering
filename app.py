@@ -259,7 +259,7 @@ def orders_history():
   restaurant_from_db = load_all_restaurants()
   users_from_db = load_all_users()
   sheet_balance = sum(sub.balance for sub in users_from_db)
-  orders_restaurant_id = [order["restaurant_id"] for order in orders_from_db]
+  orders_restaurant_id = [order.restaurant_id for order in orders_from_db]
   for order_restaurant_id in orders_restaurant_id:
     order_restaurant_name.append(
       Restaurant.query.filter_by(id=order_restaurant_id).first())
@@ -278,18 +278,20 @@ def orders_history():
 def home():
   order_restaurant_name = []
   orders_from_db = load_orders_from_db()
+  open_orders = [order for order in orders_from_db if order.status == "Open"]
+  # open_orders = Orders.query.filter_by(status="Open")
   restaurant_from_db = load_all_restaurants()
   users_from_db = load_all_users()
   sheet_balance = sum(sub.balance for sub in users_from_db)
-  orders_restaurant_id = [order["restaurant_id"] for order in orders_from_db]
+  orders_restaurant_id = [order.restaurant_id for order in open_orders]
   for order_restaurant_id in orders_restaurant_id:
     order_restaurant_name.append(
       Restaurant.query.filter_by(id=order_restaurant_id).first())
-  # print(order_restaurant_name)
-  # print(orders_from_db)
-  zipped_data = zip(orders_from_db, order_restaurant_name)
+  zipped_data = zip(open_orders, order_restaurant_name)
+  # zipped_list = list(zipped_data)
+  # length_zipped_data = len(zipped_list)
   return render_template('home.html',
-                         orders=orders_from_db,
+                         orders=open_orders,
                          sheet_balance=sheet_balance,
                          users=users_from_db,
                          currentUser=current_user,

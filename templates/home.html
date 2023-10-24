@@ -112,7 +112,7 @@
     </div>
   </div>
   </div>
-  <!-- <hr class="solid centered col-lg-10 "> -->
+
   <div class="container-fluid">
     <div class="row d-flex justify-content-center gap-2">
     <div class="col-sm-9">
@@ -126,8 +126,8 @@
     </div>
     </div>
   </div>
-  {% if zipped_data != None %}
   {% for order,order_restaurant_name in zipped_data|reverse %}
+
   <ol class="list-group" style="margin-left:15%;margin-right:15%;">
     <li class="list-group-item d-flex justify-content-between align-items-start">
       <div class="ms-2 me-auto">
@@ -144,11 +144,6 @@
     </li>
   </ol>
   {% endfor %}
-
-  {%else%}
-  <h2 class="text-center fs-2">No Active Orders</h2>
-
-  {% endif %}
 
 
 
