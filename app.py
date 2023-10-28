@@ -37,7 +37,7 @@ app = Flask(__name__)
 bot = telebot.TeleBot(os.environ['API_KEY'])
 
 bot.remove_webhook()
-bot.set_webhook(url="https://corporategroupordering-1--hanymak.repl.co/api")
+bot.set_webhook(url="https://tefoodies.fun/api")
 # BOT_TOKEN = os.environ['API_KEY']
 # BOT_INTERVAL = 3
 # BOT_TIMEOUT = 30
@@ -299,7 +299,7 @@ def send_telegram_bot_message(chat_id, message):
 
 
 def check_for_pattern(message):
-  print("hello Hany___________")
+  # print("hello Hany___________")
   print(message.chat.id)
   try:
     with app.app_context():
