@@ -22,15 +22,22 @@ import telebot
 import sys
 import time
 from time import sleep
+import re
+import random
+import string
+
 #telegram API
 # Define your bot token
 # bot = telebot.TeleBot(os.environ['API_KEY'])
 import telebot
-import threading
+
 from time import sleep
 
 app = Flask(__name__)
+bot = telebot.TeleBot(os.environ['API_KEY'])
 
+bot.remove_webhook()
+bot.set_webhook(url="https://corporategroupordering-1--hanymak.repl.co/api")
 # BOT_TOKEN = os.environ['API_KEY']
 # BOT_INTERVAL = 3
 # BOT_TIMEOUT = 30
@@ -140,6 +147,8 @@ class User(db.Model, UserMixin):
   volt_balance = db.Column(db.Numeric(10, 2), default=0)
   admin = db.Column(db.Boolean, default=False)
   active = db.Column(db.Boolean, default=True)
+  random_pattern = db.Column(db.String(20), nullable=True, unique=True)
+  chat_id = db.Column(db.String(255), nullable=True, unique=True)
 
 
 class Transaction(db.Model):
@@ -199,6 +208,20 @@ class OrderItem(db.Model):
   quantity = db.Column(db.Numeric(10, 2), nullable=False)
 
 
+@app.route('/api', methods=['Get', 'POST'])
+def webhook():
+  json_str = request.get_data().decode('UTF-8')
+  update = telebot.types.Update.de_json(json_str)
+  bot.process_new_updates([update])
+  return '', 200
+
+
+@bot.message_handler(commands=['start', 'help'])
+def send_welcome(message):
+  bot.send_message(message.chat.id,
+                   "Welcome to tefoodies bot!\nPlease enter the token")
+
+
 with app.app_context():
 
   db.create_all()
@@ -239,6 +262,14 @@ def load_all_transcations():
   return Transaction.query.all()
 
 
+def generate_random_pattern(length):
+  characters = string.ascii_letters + string.digits  # Letters (both cases) and numbers
+  return ''.join(random.choice(characters) for _ in range(length))
+
+
+# print(generate_random_pattern(5))
+
+
 # def load_transactions_from_db():
 #   with engine.connect() as conn:
 #     result = conn.execution_options(stream_results=True).execute(
@@ -249,6 +280,62 @@ def load_all_transcations():
 #     for idx, r in enumerate(result_all):
 #       transactions.append(dict(zip(column_names, r)))
 #   return transactions
+# def check_for_pattern(message):
+#   print("not implemented yet")
+#   pattern = r"Hello hany"  # Use the correct regular expression pattern
+#   match = re.match(pattern, message.text, re.I)
+#   if match:
+#     return message.chat.id
+#   else:
+#     return None
+def send_telegram_bot_message(chat_id, message):
+  try:
+    with app.app_context():
+      bot.send_message(chat_id, message)
+    return True
+  except Exception as e:
+    print(f"An exception occurred: {e}")
+    return None
+
+
+def check_for_pattern(message):
+  print("hello Hany___________")
+  print(message.chat.id)
+  try:
+    with app.app_context():
+      user_match_random_pattern = User.query.filter_by(
+        random_pattern=message.text).first()
+    print(f"users: {user_match_random_pattern}")
+
+  except Exception as e:
+    print(f"An exception occurred: {e}")
+
+  if user_match_random_pattern:
+    # Your code block
+    return user_match_random_pattern
+  else:
+    # Handle the case when users is None
+    return None
+
+
+@bot.message_handler(
+  func=lambda message: check_for_pattern(message) is not None)
+def handle_specific_text(message):
+  user = check_for_pattern(message)
+  print("Horry 1")
+
+  if user:
+    print(user.name)
+    try:
+      with app.app_context():
+        curr_user = User.query.filter_by(id=user.id).first()
+        curr_user.chat_id = message.chat.id
+        db.session.commit()
+        bot.send_message(message.chat.id,
+                         "Hello " + user.name + ", Welcome to tefoodies bot")
+
+    except Exception as e:
+      print(f"An exception occurred: {e}")
 
 
 @app.route("/order_history", methods=['GET', 'POST'])
@@ -347,6 +434,9 @@ def create_order():
       msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
         'time_to_order'] + " mints" + "\n\nRegards,\nTE-Foodies"
       mail.send(msg)
+      if (user.chat_id != None):
+        bot.send_message(user.chat_id, msg.body)
+
   new_order = Orders(restaurant_id=restaurant.id,
                      order_within_time=data['time_to_order'],
                      status='Open',
@@ -527,8 +617,15 @@ def order_sheet(id):
         amount = -float(cost) - float(delivery_per_user)
         msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user.name + "\n\nTransaction Amount : " + str(
           amount
-        ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + "Order from " + order_restaurant.name + "\n\nRegards,\nTE-Foodies"
+        ) + "\n\nBalance Before/After : " + str(float(
+          float(user.balance) + float(cost) + float(delivery_per_user)
+        )) + " / " + str(float(
+          user.balance
+        )) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + "Order from " + order_restaurant.name + "\n\nRegards,\nTE-Foodies"
         mail.send(msg)
+        if (user.chat_id != None):
+          print("hello user here you should find telegram msg")
+          bot.send_message(user.chat_id, msg.body)
         db.session.add(new_transaction)
 
       db.session.commit()
@@ -550,6 +647,8 @@ def order_sheet(id):
 
           msg.body = "Dears,\n\nKindly be noted that your has arrived at " + order.dining_room + "\n\nRegards,\nTE-Foodies"
           mail.send(msg)
+          if (user.chat_id != None):
+            bot.send_message(user.chat_id, msg.body)
 
       return redirect(url_for('order_sheet', id=id))
     elif action == "cancelOrder":
@@ -644,20 +743,35 @@ def transfer_money():
   user_from.balance = float(user_from.balance) - float(data['transfer_amount'])
 
   user_to.balance = float(user_to.balance) + float(data['transfer_amount'])
-
-  if (current_user.email != user_to.email
-      and current_user.email != user_from.email):
-    msg = Message(
-      "TE-Foodies Transaction",
-      sender='noreply@tsfoodies',
-      recipients=[user_from.email, user_to.email, current_user.email])
-  else:
-    msg = Message("TE-Foodies Transaction",
+  # user_list = [user_from, user_to]
+  msg = Message("TE-Foodies Transaction",
                   sender='noreply@tsfoodies',
-                  recipients=[user_from.email, user_to.email])
+                  recipients=[user_from.email])
   msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-    'transfer_amount'] + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+    'transfer_amount'] + "\n\nBalance Before/After : " + str(float(
+    float(user_from.balance) + float(data['transfer_amount']))) + " / " + str(float(
+    user_from.balance
+  )) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
   mail.send(msg)
+  if (user_from.chat_id != None):
+    bot.send_message(user_from.chat_id, msg.body)
+
+  msg = Message("TE-Foodies Transaction",
+    sender='noreply@tsfoodies',
+    recipients=[user_to.email])
+  msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
+  'transfer_amount'] + "\n\nBalance Before/After : " + str(float(
+  float(user_to.balance) - float(data['transfer_amount']))) + " / " + str(float(
+  user_to.balance
+  )) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+  mail.send(msg)
+  if (user_to.chat_id != None):
+    bot.send_message(user_to.chat_id, msg.body)
+
+
+
+
+  
   db.session.add(new_transaction)
 
   db.session.commit()
@@ -699,9 +813,20 @@ def balance_recharge():
                   recipients=[user_to.email])
 
   msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-    'transfer_amount'] + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + data[
+    'transfer_amount'] + "\n\nBalance Before/After : " + str( float( float( user_to.balance ) - float( data[
+  'transfer_amount']))) +" / "+ str(user_to.balance) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + data[
       'transfer_reason'] + "\n\nRegards,\nTE-Foodies"
   mail.send(msg)
+  if (current_user.email != user_to.email):
+    if (user_to.chat_id != None):
+      bot.send_message(user_to.chat_id, msg.body)
+    if (current_user.chat_id != None):
+      bot.send_message(current_user.chat_id, msg.body)
+
+  else:
+    if (user_to.chat_id != None):
+      bot.send_message(user_to.chat_id, msg.body)
+
   db.session.add(new_transaction)
 
   db.session.commit()
@@ -796,6 +921,15 @@ def verify_email(token):
   try:
     token_user = s.loads(token, salt='email-confirm', max_age=3600)
 
+    random_pattern = generate_random_pattern(5)
+    random_pattern_exists = User.query.filter_by(
+      random_pattern=random_pattern).first()
+
+    while random_pattern_exists is not None:
+      # If the random pattern already exists, generate a new one
+      random_pattern = generate_random_pattern(5)
+      random_pattern_exists = User.query.filter_by(
+        random_pattern=random_pattern).first()
     # print(bytes(token_user['user_password'], 'utf-8'))
     new_user = User(name=token_user['name'],
                     phone=token_user['phone'],
@@ -803,7 +937,8 @@ def verify_email(token):
                     password=bytes(token_user['password'], 'utf-8'),
                     balance=0,
                     admin=False,
-                    active=True)
+                    active=True,
+                    random_pattern=random_pattern)
     print("\n\n\n\nToken Valid\n\n\n\n\n")
     db.session.add(new_user)
     db.session.commit()
