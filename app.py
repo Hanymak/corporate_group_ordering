@@ -456,13 +456,17 @@ def create_order():
 @app.route("/create_restaurant", methods=['GET', 'POST'])
 @login_required
 def create_restaurant():
-
   data = request.form
-  new_restaurant = Restaurant(name=data['restaurant_name'],
-                              address=data['restaurant_address'],
-                              contact_info=data['restaurant_phone'])
-  db.session.add(new_restaurant)
-  db.session.commit()
+  restaurant_name = Restaurant.query.filter_by(
+    name=data['restaurant_name'].upper()).first()
+  if not restaurant_name:
+    new_restaurant = Restaurant(name=data['restaurant_name'],
+                                address=data['restaurant_address'],
+                                contact_info=data['restaurant_phone'])
+    db.session.add(new_restaurant)
+    db.session.commit()
+  else:
+    flash("Restaurant exists")
   return redirect("home")
 
 
@@ -617,11 +621,11 @@ def order_sheet(id):
         amount = -float(cost) - float(delivery_per_user)
         msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user.name + "\n\nTransaction Amount : " + str(
           amount
-        ) + "\n\nBalance Before/After : " + str(float(
-          float(user.balance) + float(cost) + float(delivery_per_user)
-        )) + " / " + str(float(
-          user.balance
-        )) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + "Order from " + order_restaurant.name + "\n\nRegards,\nTE-Foodies"
+        ) + "\n\nBalance Before/After : " + str(
+          float(float(user.balance) + float(cost) + float(delivery_per_user))
+        ) + " / " + str(
+          float(user.balance)
+        ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + "Order from " + order_restaurant.name + "\n\nRegards,\nTE-Foodies"
         mail.send(msg)
         if (user.chat_id != None):
           print("hello user here you should find telegram msg")
@@ -745,33 +749,31 @@ def transfer_money():
   user_to.balance = float(user_to.balance) + float(data['transfer_amount'])
   # user_list = [user_from, user_to]
   msg = Message("TE-Foodies Transaction",
-                  sender='noreply@tsfoodies',
-                  recipients=[user_from.email])
+                sender='noreply@tsfoodies',
+                recipients=[user_from.email])
   msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-    'transfer_amount'] + "\n\nBalance Before/After : " + str(float(
-    float(user_from.balance) + float(data['transfer_amount']))) + " / " + str(float(
-    user_from.balance
-  )) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+    'transfer_amount'] + "\n\nBalance Before/After : " + str(
+      float(float(user_from.balance) + float(data['transfer_amount']))
+    ) + " / " + str(
+      float(user_from.balance)
+    ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
   mail.send(msg)
   if (user_from.chat_id != None):
     bot.send_message(user_from.chat_id, msg.body)
 
   msg = Message("TE-Foodies Transaction",
-    sender='noreply@tsfoodies',
-    recipients=[user_to.email])
+                sender='noreply@tsfoodies',
+                recipients=[user_to.email])
   msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-  'transfer_amount'] + "\n\nBalance Before/After : " + str(float(
-  float(user_to.balance) - float(data['transfer_amount']))) + " / " + str(float(
-  user_to.balance
-  )) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+    'transfer_amount'] + "\n\nBalance Before/After : " + str(
+      float(float(user_to.balance) - float(data['transfer_amount']))
+    ) + " / " + str(
+      float(user_to.balance)
+    ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
   mail.send(msg)
   if (user_to.chat_id != None):
     bot.send_message(user_to.chat_id, msg.body)
 
-
-
-
-  
   db.session.add(new_transaction)
 
   db.session.commit()
@@ -813,8 +815,11 @@ def balance_recharge():
                   recipients=[user_to.email])
 
   msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-    'transfer_amount'] + "\n\nBalance Before/After : " + str( float( float( user_to.balance ) - float( data[
-  'transfer_amount']))) +" / "+ str(user_to.balance) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + data[
+    'transfer_amount'] + "\n\nBalance Before/After : " + str(
+      float(float(user_to.balance) - float(data['transfer_amount']))
+    ) + " / " + str(
+      user_to.balance
+    ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + data[
       'transfer_reason'] + "\n\nRegards,\nTE-Foodies"
   mail.send(msg)
   if (current_user.email != user_to.email):
