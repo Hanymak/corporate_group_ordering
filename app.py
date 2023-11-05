@@ -552,10 +552,12 @@ def order_sheet(id):
   #   user = User.query.filter_by(id=orderitems_uniqueorders[0]).all()
   #   print(user)
   # exists = db.session.query(User.id).filter_by(name='davidism').first() is not None
-  if request.method == "POST":
-    action = request.form.get("action")
-    if action == "addOrder":
 
+  if request.method == "POST":
+
+    action = request.form.get("action")
+
+    if action == "addOrder":
       data = request.form
       menuitem = MenuItem.query.filter_by(description=data['menuitem'],
                                           restaurant_id=restaurant_id).first()
@@ -581,6 +583,7 @@ def order_sheet(id):
                                       menuitem_id=menuitem.id,
                                       user_id=current_user.id,
                                       quantity=data['quantity'])
+            print(new_orderitem)
             db.session.add(new_orderitem)
             db.session.commit()
         # if (data['menuitem'] == orderitems[])
