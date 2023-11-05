@@ -1,7 +1,7 @@
 import os
 from flask import Flask, flash, render_template, jsonify, request, redirect, url_for, session
-from database import engine, add_transfered_balance_to_user_db, balance_recharge_to_user_db
-from sqlalchemy import create_engine, text, distinct
+# from database import engine, add_transfered_balance_to_user_db, balance_recharge_to_user_db
+from sqlalchemy import create_engine, text, distinct, MetaData
 # from sqlalchemy.orm import Session,sessionmaker
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
@@ -25,6 +25,7 @@ from time import sleep
 import re
 import random
 import string
+# from flask_caching import Cache
 
 #telegram API
 # Define your bot token
@@ -34,6 +35,11 @@ import telebot
 from time import sleep
 
 app = Flask(__name__)
+# app.config['CACHE_TYPE'] = 'simple'
+# app.config['CACHE_DEFAULT_TIMEOUT'] = 300
+
+# cache = Cache(app)
+
 bot = telebot.TeleBot(os.environ['API_KEY'])
 
 bot.remove_webhook()
@@ -74,8 +80,11 @@ bot.set_webhook(url="https://tefoodies.fun/api")
 # polling_thread = threading.Thread(target=bot_polling)
 # polling_thread.daemon = True
 # polling_thread.start()
-
-db_connection_string = os.environ['DB_CONNECTION_STRING']
+Debug = os.environ['Debug']
+if Debug:
+  db_connection_string = os.environ['DB_CONNECTION_STRING_TEST_BRANCH']
+else:
+  db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
 
 #mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -90,6 +99,15 @@ mail = Mail(app)
 # create the extension
 # db = SQLAlchemy()
 # configure the SQLite database, relative to the app instance folder
+# if Debug:
+#   # Configuration for the test database
+#   app.config['SQLALCHEMY_DATABASE_URI_TEST'] = db_connection_string
+#   app.config['TESTING'] = True  # Enable testing mode
+#   app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF protection in tests
+
+#   test_db = SQLAlchemy(app,
+#                        session_options={'expire_on_commit': False
+#                                         })  # Avoid session expiration in tests
 app.config['SQLALCHEMY_DATABASE_URI'] = db_connection_string
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -322,10 +340,8 @@ def check_for_pattern(message):
   func=lambda message: check_for_pattern(message) is not None)
 def handle_specific_text(message):
   user = check_for_pattern(message)
-  print("Horry 1")
 
   if user:
-    print(user.name)
     try:
       with app.app_context():
         curr_user = User.query.filter_by(id=user.id).first()
@@ -362,6 +378,7 @@ def orders_history():
 
 @app.route("/home", methods=['GET', 'POST'])
 @login_required
+# @cache.cached(timeout=600)  # Cache for 10 minutes
 def home():
   order_restaurant_name = []
   orders_from_db = load_orders_from_db()
@@ -370,6 +387,8 @@ def home():
   restaurant_from_db = load_all_restaurants()
   users_from_db = load_all_users()
   sheet_balance = sum(sub.balance for sub in users_from_db)
+  admin_wallet_balance = current_user.volt_balance
+  wallet_balance = sum(sub.volt_balance for sub in users_from_db)
   orders_restaurant_id = [order.restaurant_id for order in open_orders]
   for order_restaurant_id in orders_restaurant_id:
     order_restaurant_name.append(
@@ -383,7 +402,9 @@ def home():
                          users=users_from_db,
                          currentUser=current_user,
                          restaurants=restaurant_from_db,
-                         zipped_data=zipped_data)
+                         zipped_data=zipped_data,
+                         admin_wallet_balance=admin_wallet_balance,
+                         wallet_balance=wallet_balance)
 
 
 #this function populates the transaction history
@@ -536,7 +557,8 @@ def order_sheet(id):
     if action == "addOrder":
 
       data = request.form
-      menuitem = MenuItem.query.filter_by(description=data['menuitem']).first()
+      menuitem = MenuItem.query.filter_by(description=data['menuitem'],
+                                          restaurant_id=restaurant_id).first()
 
       orderitems = OrderItem.query.filter_by(order_id=id)
       user_exists_inorder = orderitems.filter_by(user_id=current_user.id)
@@ -804,7 +826,8 @@ def balance_recharge():
 
   user_to.balance = float(user_to.balance) + float(
     request.form['transfer_amount'])
-
+  current_user.volt_balance = float(current_user.volt_balance) + float(
+    request.form['transfer_amount'])
   if (current_user.email != user_to.email):
     msg = Message("TE-Foodies Transaction",
                   sender='noreply@tsfoodies',

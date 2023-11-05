@@ -120,6 +120,21 @@
   </div>
   </div>
 
+  {% if currentUser['admin'] == 1%}
+  <div class="container-fluid">
+  <div class="row align-items-start ">
+    <div class="col">
+
+      <p class="text-center fs-2  list-group-item list-group-item-primary p-3 " style="color:white; border-radius: 50px 15px;margin-top : 8%;margin-left:20%;border-top: 5px solid lightgreen;background-color: #adb5bd  ;">My Wallet:{{admin_wallet_balance}}</p>
+    </div>
+    <div class="col" >
+      <p class="text-center fs-2  list-group-item list-group-item-info p-3" style="color:white;border-radius: 15px 50px;margin-top : 8%;margin-right:20%;border-top: 5px solid lightgreen;background-color: #adb5bd  ;"> Wallet Balance:{{wallet_balance}} </p>
+    </div>
+  </div>
+  </div>
+
+{%endif%}
+  
   <div class="container-fluid">
     <div class="row d-flex justify-content-center gap-2">
     <div class="col-sm-9">

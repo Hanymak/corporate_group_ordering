@@ -1,4 +1,27 @@
+<script>
+  function handleClick(button) {
+      // Disable the button
+      button.disabled = true;
 
+      // Get the form associated with the button
+      const form = button.form;
+
+      // Perform client-side validation if needed
+      if (form.checkValidity()) {
+          // If the form is valid, submit it
+          form.submit();
+
+          // You can also handle the server response here and provide feedback to the user.
+          setTimeout(function() {
+              // Enable the button after the simulated server response
+              button.disabled = false;
+          }, 20000); // Simulated delay (2 seconds in this example)
+      } else {
+          // If the form is not valid, re-enable the button
+          button.disabled = false;
+      }
+  }
+</script>
 
 <!-- Modal -->
 <div class="modal fade" id="exampleModal6" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -64,7 +87,7 @@
 
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" name ="action" value="addCollegeOrder" class="btn btn-primary">Add/Modify</button>
+            <button type="submit" name ="action" value="addCollegeOrder" class="btn btn-primary"  onclick="handleClick(this);" >Add/Modify</button>
           </div>
         </form>
       </div>
