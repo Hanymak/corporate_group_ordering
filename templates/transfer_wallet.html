@@ -1,0 +1,154 @@
+<script>
+  function handleClick(button) {
+      // Disable the button
+      button.disabled = true;
+
+      // Get the form associated with the button
+      const form = button.form;
+
+      // Perform client-side validation if needed
+      if (form.checkValidity()) {
+          // If the form is valid, submit it
+          form.submit();
+
+          // You can also handle the server response here and provide feedback to the user.
+          setTimeout(function() {
+              // Enable the button after the simulated server response
+              button.disabled = false;
+          }, 20000); // Simulated delay (2 seconds in this example)
+      } else {
+          // If the form is not valid, re-enable the button
+          button.disabled = false;
+      }
+  }
+</script>
+<!-- Modal -->
+			<div class="modal fade" id="exampleModal4" tabindex="-1" aria-labelledby="exampleModalLabel4" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h1 class="modal-title fs-5" id="exampleModalLabel4">Transfer Money</h1>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+						</div>
+
+
+
+
+						<div class="modal-body">
+
+
+              <form action="/transfer_wallet"  method="post">
+
+                <label>Transfer from :
+                 {% if currentUser['admin']%}
+                 <select required  name="from_user" id="selectBox3" onchange="remove_duplicate_selection2();" >
+                  <option value="" disabled selected>Select your option</option>
+                  {% for user in admin_users %}
+
+                  <option value="{{user['name']}}" >{{user['name']}}</option>
+
+
+                  {% endfor %}
+                  {% else %} 
+                  <select name="from_user" id="selectBox3" >
+                    <option value="{{currentUser['name']}}" selected>{{currentUser['name']}}</option>
+                    {% endif %}   
+                  </select>
+
+                </label>
+
+
+                <label style="margin-top:5%;">Transfer to :
+
+                  <select name="to_user" id="selectBox4"  required >
+
+                    <option value="" disabled selected>Select your option</option>
+                    {% for user in admin_users %}
+                    {% if currentUser['admin'] %}
+                    <option value="{{user['name']}}" > {{user['name']}} </option>
+                    {% else %}
+                    {% if user['name'] != currentUser['name'] %}
+                    <option value="{{user['name']}}" > {{user['name']}} </option>
+                    {% endif %}
+                    {% endif %}  
+
+                    {% endfor %}
+
+                  </select>
+
+                </label>
+                <br><br>
+                <label>Amount :
+                <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
+                  <div class="input-group mb-3">
+                    <span class="input-group-text">$</span>
+                    <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount" class="form-control" aria-label="Amount (to the nearest dollar)">
+                    <span class="input-group-text">.00</span>
+                  </div>
+
+
+
+                  <div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
+                    <span  class="input-group-text">Transfer Reason</span>
+                    <textarea maxlength = 50 name="transfer_reason" required  class="form-control" aria-label="With textarea"></textarea>
+                  </div>
+
+
+                </container>
+                </label>
+
+                <!-- name = "transfer" value="Transfer" -->
+
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="submit"   class="btn btn-primary">Transfer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+
+          <script>
+            function remove_user() {
+
+              var selectobject = document.getElementById("selectBox4");
+              for (var i=0; i<selectobject.length; i++) {
+                print(currentUser["name"])
+                if (selectobject.options[i].value == currentUser)
+                  selectobject.remove(i);
+              }
+
+            }
+          </script>
+
+          <script>
+            var prev_idx=x.selectedIndex;
+            var prev_value=prev_value;
+            function remove_duplicate_selection2() {
+
+    // alert(x);
+// alert(prev_idx);
+              if(prev_idx !== undefined){
+      // alert(prev_idx);
+                var y = document.getElementById("selectBox4");
+                var c = document.createElement("option");
+                c.text=prev_value;
+                y.options.add(c,prev_idx); 
+                document.getElementById("selectBox4").selectedIndex = "0"; 
+
+              }
+              var x = document.getElementById("selectBox3");
+              var y = document.getElementById("selectBox4");
+
+              y.remove(x.selectedIndex);
+              prev_idx = x.selectedIndex;
+              prev_value = document.getElementById("selectBox3").options[x.selectedIndex].text; 
+    // alert(prev_idx);
+
+            }
+
+          </script>
+
+
+        </div>
+      </div>

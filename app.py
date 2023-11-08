@@ -386,6 +386,7 @@ def home():
   # open_orders = Orders.query.filter_by(status="Open")
   restaurant_from_db = load_all_restaurants()
   users_from_db = load_all_users()
+  admin_users = [user for user in users_from_db if user.admin]
   sheet_balance = sum(sub.balance for sub in users_from_db)
   admin_wallet_balance = current_user.volt_balance
   wallet_balance = sum(sub.volt_balance for sub in users_from_db)
@@ -404,7 +405,8 @@ def home():
                          restaurants=restaurant_from_db,
                          zipped_data=zipped_data,
                          admin_wallet_balance=admin_wallet_balance,
-                         wallet_balance=wallet_balance)
+                         wallet_balance=wallet_balance,
+                         admin_users=admin_users)
 
 
 #this function populates the transaction history
@@ -736,6 +738,76 @@ def order_sheet(id):
                          order_restaurant=order_restaurant,
                          delivery_cost=delivery_cost,
                          id=id)
+
+
+@app.route("/transfer_wallet", methods=['get', 'post'])
+@login_required
+def transfer_wallet():
+
+  now_utc = datetime.now(timezone('UTC'))
+
+  # Converting to Egypt time zone
+  now_cairo = now_utc.astimezone(timezone('Africa/Cairo'))
+  datetime_string = now_cairo.strftime("%d/%m/%Y %I:%M:%S")
+
+  data = request.form
+  # add_transfered_balance_to_user_db(data)
+  # print(data)
+  user_from = User.query.filter_by(name=data['from_user']).first()
+
+  user_to = User.query.filter_by(name=data['to_user']).first()
+
+  new_transaction = Transaction(
+    from_user=user_from.name,
+    from_user_balance_before=user_from.volt_balance,
+    from_user_balance_after=float(user_from.volt_balance) -
+    float(data['transfer_amount']),
+    to_user=user_to.name,
+    to_user_balance_before=user_to.volt_balance,
+    to_user_balance_after=float(user_to.volt_balance) +
+    float(data['transfer_amount']),
+    amount=float(data['transfer_amount']),
+    reason=data['transfer_reason'],
+    performed_by=current_user.name,
+    date=datetime_string)
+
+  user_from.volt_balance = float(user_from.volt_balance) - float(data['transfer_amount'])
+
+  user_to.volt_balance = float(user_to.volt_balance) + float(data['transfer_amount'])
+  # user_list = [user_from, user_to]
+  msg = Message("TE-Foodies Transaction",
+                sender='noreply@tsfoodies',
+                recipients=[user_from.email])
+  msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
+    'transfer_amount'] + "\n\nWallet Balance Before/After : " + str(
+      float(float(user_from.volt_balance) + float(data['transfer_amount']))
+    ) + " / " + str(
+      float(user_from.volt_balance)
+    ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+  mail.send(msg)
+  if (user_from.chat_id != None):
+    bot.send_message(user_from.chat_id, msg.body)
+
+  msg = Message("TE-Foodies Transaction",
+                sender='noreply@tsfoodies',
+                recipients=[user_to.email])
+  msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
+    'transfer_amount'] + "\n\nWallet Balance Before/After : " + str(
+      float(float(user_to.volt_balance) - float(data['transfer_amount']))
+    ) + " / " + str(
+      float(user_to.volt_balance)
+    ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+  mail.send(msg)
+  if (user_to.chat_id != None):
+    bot.send_message(user_to.chat_id, msg.body)
+
+  db.session.add(new_transaction)
+
+  db.session.commit()
+
+  return redirect("home")
+
+
 
 
 @app.route("/money_transfer", methods=['get', 'post'])

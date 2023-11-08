@@ -91,6 +91,15 @@
       {% include 'money_transfer.html' %}
 
       {% if currentUser['admin'] %}
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal4"  >
+        Transfer Wallet
+      </button>
+
+
+      {% include 'transfer_wallet.html' %}
+
+
+      
       <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal1">Balance Recharge</button>
 
 
