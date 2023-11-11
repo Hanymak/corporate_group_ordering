@@ -71,10 +71,18 @@
 
   {% with messages = get_flashed_messages() %}
     {% if messages %}
-  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <strong>{{ message }}!</strong> Restaurant already exists
+  {% for message in messages %}
+    <div class="container">
+      <div class="row">
+        <div class="col-x-auto text-center">
+    <div class="alert alert-danger alert-dismissible fade show" style="margin-top: 2% ;" role="alert">
+      <strong>{{ message }}!</strong>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
+    </div>
+      </div>
+    </div>
+    </div>
+  {% endfor %}
     {% endif %}
   {% endwith %}
 

@@ -448,6 +448,21 @@ def users_details():
 @app.route("/create_order", methods=['GET', 'POST'])
 @login_required
 def create_order():
+  order_restaurant_name = []
+  orders_from_db = load_orders_from_db()
+  open_orders = [order for order in orders_from_db if order.status == "Open"]
+  # open_orders = Orders.query.filter_by(status="Open")
+  restaurant_from_db = load_all_restaurants()
+  users_from_db = load_all_users()
+  admin_users = [user for user in users_from_db if user.admin]
+  sheet_balance = sum(sub.balance for sub in users_from_db)
+  admin_wallet_balance = current_user.volt_balance
+  wallet_balance = sum(sub.volt_balance for sub in users_from_db)
+  orders_restaurant_id = [order.restaurant_id for order in open_orders]
+  for order_restaurant_id in orders_restaurant_id:
+    order_restaurant_name.append(
+      Restaurant.query.filter_by(id=order_restaurant_id).first())
+  zipped_data = zip(open_orders, order_restaurant_name)
   data = request.form
   print(data)
   # Converting to Egypt time zone
@@ -458,33 +473,49 @@ def create_order():
 
   users = load_all_users()
 
-  for user in users:
-    if user.id != current_user.id:
-      msg = Message("TE-Foodies Orders",
-                    sender='noreply@tsfoodies',
-                    recipients=[user.email])
 
-      msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
-        'time_to_order'] + " mints" + "\n\nRegards,\nTE-Foodies"
-      if(user.chat_id == None):
-        mail.send(msg)
-      else :
-        bot.send_message(user.chat_id, msg.body)
+  try:
+    new_order = Orders(restaurant_id=restaurant.id,
+                       order_within_time=data['time_to_order'],
+                       status='Open',
+                       charge=0,
+                       taxes=1,
+                       service=1,
+                       delivery=0,
+                       total_charge=0,
+                       owner=current_user.name,
+                       dining_room=data['dining_room'],
+                       date=datetime_string)
+    db.session.add(new_order)
+    db.session.commit()
+    for user in users:
+      if user.id != current_user.id:
+        msg = Message("TE-Foodies Orders",
+                      sender='noreply@tsfoodies',
+                      recipients=[user.email])
 
-  new_order = Orders(restaurant_id=restaurant.id,
-                     order_within_time=data['time_to_order'],
-                     status='Open',
-                     charge=0,
-                     taxes=1,
-                     service=1,
-                     delivery=0,
-                     total_charge=0,
-                     owner=current_user.name,
-                     dining_room=data['dining_room'],
-                     date=datetime_string)
-  db.session.add(new_order)
-  db.session.commit()
-  return redirect("/order_sheet/{}".format(new_order.id))
+        msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
+          'time_to_order'] + " mints" + "\n\n Place your order from: https://www.tefoodies.fun/order_sheet/"+ str(new_order.id) +"\n\nRegards,\nTE-Foodies"
+        if(user.chat_id == None):
+          mail.send(msg)
+        else :
+          bot.send_message(user.chat_id, msg.body)
+    return redirect("/order_sheet/{}".format(new_order.id))
+  except Exception as e:
+    # Handle any exceptions that might occur during database interaction
+    flash("An error occurred while creating the order")
+    db.session.rollback()  # Rollback the transaction in case of an error
+    return render_template('home.html',
+       orders=open_orders,
+       sheet_balance=sheet_balance,
+       users=users_from_db,
+       currentUser=current_user,
+       restaurants=restaurant_from_db,
+       zipped_data=zipped_data,
+       admin_wallet_balance=admin_wallet_balance,
+       wallet_balance=wallet_balance,
+       admin_users=admin_users)  # Redirect to an error page or another route
+
 
 
 @app.route("/create_restaurant", methods=['GET', 'POST'])
@@ -571,164 +602,213 @@ def order_sheet(id):
     action = request.form.get("action")
 
     if action == "addOrder":
-      data = request.form
-      menuitem = MenuItem.query.filter_by(description=data['menuitem'],
-                                          restaurant_id=restaurant_id).first()
-
-      orderitems = OrderItem.query.filter_by(order_id=id)
-      user_exists_inorder = orderitems.filter_by(user_id=current_user.id)
-      if (user_exists_inorder):
-        order_already_exists_inorder = orderitems.filter_by(
-          user_id=current_user.id, menuitem_id=menuitem.id).first()
-        if (order_already_exists_inorder):
-          if float(data['quantity']) == 0:
-            # print('hello word not delete')
-            db.session.delete(order_already_exists_inorder)
-          else:
-            order_already_exists_inorder.quantity = float(data['quantity'])
-          db.session.commit()
-
-        else:
-          if (float(data['quantity']) == 0):
-            flash("Item does not already exist")
-          else:
-            new_orderitem = OrderItem(order_id=id,
-                                      menuitem_id=menuitem.id,
-                                      user_id=current_user.id,
-                                      quantity=data['quantity'])
-            print(new_orderitem)
-            db.session.add(new_orderitem)
+      try:
+        data = request.form
+        menuitem = MenuItem.query.filter_by(description=data['menuitem'],
+                                            restaurant_id=restaurant_id).first()
+  
+        orderitems = OrderItem.query.filter_by(order_id=id)
+        user_exists_inorder = orderitems.filter_by(user_id=current_user.id)
+        if (user_exists_inorder):
+          order_already_exists_inorder = orderitems.filter_by(
+            user_id=current_user.id, menuitem_id=menuitem.id).first()
+          if (order_already_exists_inorder):
+            if float(data['quantity']) == 0:
+              # print('hello word not delete')
+              db.session.delete(order_already_exists_inorder)
+            else:
+              order_already_exists_inorder.quantity = float(data['quantity'])
             db.session.commit()
-        # if (data['menuitem'] == orderitems[])
+  
+          else:
+            if (float(data['quantity']) == 0):
+              flash("Item does not already exist")
+            else:
+              new_orderitem = OrderItem(order_id=id,
+                                        menuitem_id=menuitem.id,
+                                        user_id=current_user.id,
+                                        quantity=data['quantity'])
+              print(new_orderitem)
+              db.session.add(new_orderitem)
+              db.session.commit()
+      except Exception as e:
+        # Handle any exceptions that might occur during database interaction
+        print(f"An error occurred: {e}")
+        db.session.rollback()  # Rollback the transaction in case of an error
+        flash("An error occurred while adding the order item.")
+          # if (data['menuitem'] == orderitems[])
       return redirect(url_for('order_sheet', id=id))
     elif action == "updateItemPrice":
-      data = request.form
-      order = Orders.query.filter_by(id=id).first()
-      menuitem = MenuItem.query.filter_by(
-        description=data['menuitem'],
-        restaurant_id=order.restaurant_id).first()
-      menuitem.price = float(data['item_new_price'])
-      db.session.commit()
+      try:
+        data = request.form
+        order = Orders.query.filter_by(id=id).first()
+        menuitem = MenuItem.query.filter_by(
+          description=data['menuitem'],
+          restaurant_id=order.restaurant_id).first()
+        menuitem.price = float(data['item_new_price'])
+        db.session.commit()
+      except Exception as e:
+        # Handle any exceptions that might occur during database interaction
+        print(f"An error occurred: {e}")
+        db.session.rollback()  # Rollback the transaction in case of an error
+        flash("An error occurred while updating the menu item price.")
       return redirect(url_for('order_sheet', id=id))
     elif action == "addMenuItem":
-      data = request.form
-      order = Orders.query.filter_by(id=id).first()
-      restaurant = Restaurant.query.filter_by(id=order.restaurant_id).first()
-      new_menuitem = MenuItem(restaurant_id=order.restaurant_id,
-                              name=restaurant.name,
-                              description=data['itemName'],
-                              price=data['itemPrice'])
-      db.session.add(new_menuitem)
-      db.session.commit()
+      try:
+        data = request.form
+        order = Orders.query.filter_by(id=id).first()
+        restaurant = Restaurant.query.filter_by(id=order.restaurant_id).first()
+        new_menuitem = MenuItem(restaurant_id=order.restaurant_id,
+                                name=restaurant.name,
+                                description=data['itemName'],
+                                price=data['itemPrice'])
+        db.session.add(new_menuitem)
+        db.session.commit()
+      except Exception as e:
+        # Handle any exceptions that might occur during database interaction
+        print(f"An error occurred: {e}")
+        db.session.rollback()  # Rollback the transaction in case of an error
+        flash("An error occurred while adding a new menu item.")
       return redirect(url_for('order_sheet', id=id))
     elif action == "payOrder":
-      data = request.form
-      order = Orders.query.filter_by(id=id).first()
-      order.status = "Paid"
-      order.delivery = float(data['delivery_fees'])
-      order.total_charge = order_cost + float(data['delivery_fees'])
-      delivery_per_user = "{:.2f}".format(
-        float(data['delivery_fees']) / len(users_inorder))
-      for user, cost in zip(users_inorder, users_items_cost):
-        user.balance = float(
-          user.balance) - float(cost) - float(delivery_per_user)
-        print(delivery_per_user)
-      user_vault_paid = User.query.filter_by(name=data['user_name']).first()
-      user_vault_paid.volt_balance = float(
-        user_vault_paid.volt_balance) - float(order_cost) - float(
-          data['delivery_fees'])
-      now_utc = datetime.now(timezone('UTC'))
-      # Converting to Egypt time zone
-      now_cairo = now_utc.astimezone(timezone('Africa/Cairo'))
-      datetime_string = now_cairo.strftime("%d/%m/%Y %I:%M:%S")
-
-      for user, cost in zip(users_inorder, users_items_cost):
-        new_transaction = Transaction(
-          from_user=user.name,
-          from_user_balance_before=float(user.balance) + float(cost) +
-          float(delivery_per_user),
-          from_user_balance_after=float(user.balance),
-          amount=float(cost) + float(delivery_per_user),
-          reason="Order from " + order_restaurant.name,
-          performed_by=current_user.name,
-          date=datetime_string)
-
-        msg = Message("TE-Foodies Order Payment Transaction",
-                      sender='noreply@tsfoodies',
-                      recipients=[user.email])
-        amount = -float(cost) - float(delivery_per_user)
-        msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user.name + "\n\nTransaction Amount : " + str(
-          amount
-        ) + "\n\nBalance Before/After : " + str(
-          float(float(user.balance) + float(cost) + float(delivery_per_user))
-        ) + " / " + str(
-          float(user.balance)
-        ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + "Order from " + order_restaurant.name + "\n\nRegards,\nTE-Foodies"
-        if(user.chat_id == None):
-          mail.send(msg)
-        else :
-          # print("hello user here you should find telegram msg")
-          bot.send_message(user.chat_id, msg.body)
-        db.session.add(new_transaction)
-
-      db.session.commit()
-      return redirect(url_for('order_sheet', id=id))
-    elif action == "closeOrder":
-      order = Orders.query.filter_by(id=id).first()
-      order.status = "Closed"
-      db.session.commit()
-      return redirect(url_for('order_sheet', id=id))
-    elif action == "orderArrived":
-      order = Orders.query.filter_by(id=id).first()
-      order.status = "Arrived"
-      db.session.commit()
-      for user in users_inorder:
-        if user.id != current_user.id:
-          msg = Message("TE-Foodies Order Arrived",
+      try:
+        data = request.form
+        order = Orders.query.filter_by(id=id).first()
+        order.status = "Paid"
+        order.delivery = float(data['delivery_fees'])
+        order.total_charge = order_cost + float(data['delivery_fees'])
+        delivery_per_user = "{:.2f}".format(
+          float(data['delivery_fees']) / len(users_inorder))
+        for user, cost in zip(users_inorder, users_items_cost):
+          user.balance = float(
+            user.balance) - float(cost) - float(delivery_per_user)
+          print(delivery_per_user)
+        user_vault_paid = User.query.filter_by(name=data['user_name']).first()
+        user_vault_paid.volt_balance = float(
+          user_vault_paid.volt_balance) - float(order_cost) - float(
+            data['delivery_fees'])
+        now_utc = datetime.now(timezone('UTC'))
+        # Converting to Egypt time zone
+        now_cairo = now_utc.astimezone(timezone('Africa/Cairo'))
+        datetime_string = now_cairo.strftime("%d/%m/%Y %I:%M:%S")
+  
+        for user, cost in zip(users_inorder, users_items_cost):
+          new_transaction = Transaction(
+            from_user=user.name,
+            from_user_balance_before=float(user.balance) + float(cost) +
+            float(delivery_per_user),
+            from_user_balance_after=float(user.balance),
+            amount=float(cost) + float(delivery_per_user),
+            reason="Order from " + order_restaurant.name,
+            performed_by=current_user.name,
+            date=datetime_string)
+          db.session.add(new_transaction)
+          db.session.commit()
+          msg = Message("TE-Foodies Order Payment Transaction",
                         sender='noreply@tsfoodies',
                         recipients=[user.email])
-
-          msg.body = "Dears,\n\nKindly be noted that your order has arrived at " + order.dining_room + "\n\nRegards,\nTE-Foodies"
+          amount = -float(cost) - float(delivery_per_user)
+          msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user.name + "\n\nTransaction Amount : " + str(
+            amount
+          ) + "\n\nBalance Before/After : " + str(
+            float(float(user.balance) + float(cost) + float(delivery_per_user))
+          ) + " / " + str(
+            float(user.balance)
+          ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + "Order from " + order_restaurant.name + "\n\nRegards,\nTE-Foodies"
           if(user.chat_id == None):
             mail.send(msg)
           else :
+            # print("hello user here you should find telegram msg")
             bot.send_message(user.chat_id, msg.body)
-
+          
+        
+      except Exception as e:
+        # Handle any exceptions that might occur during database interaction
+        print(f"An error occurred: {e}")
+        db.session.rollback()  # Rollback the transaction in case of an error
+        flash("An error occurred while paying the order.")
+      return redirect(url_for('order_sheet', id=id))
+    elif action == "closeOrder":
+      try:
+        if len(users_inorder) != 0 :
+          order = Orders.query.filter_by(id=id).first()
+          order.status = "Closed"
+          db.session.commit()
+        else:
+          flash("You have not ordered anything yet.")
+      except Exception as e:
+        # Handle any exceptions that might occur during database interaction
+        print(f"An error occurred: {e}")
+        db.session.rollback()  # Rollback the transaction in case of an error
+        flash("An error occurred while closing the order.")
+      return redirect(url_for('order_sheet', id=id))
+    elif action == "orderArrived":
+      try:
+        order = Orders.query.filter_by(id=id).first()
+        order.status = "Arrived"
+        db.session.commit()
+        for user in users_inorder:
+          if user.id != current_user.id:
+            msg = Message("TE-Foodies Order Arrived",
+                          sender='noreply@tsfoodies',
+                          recipients=[user.email])
+  
+            msg.body = "Dears,\n\nKindly be noted that your order has arrived at " + order.dining_room + "\n\nRegards,\nTE-Foodies"
+            if(user.chat_id == None):
+              mail.send(msg)
+            else :
+              bot.send_message(user.chat_id, msg.body)
+      except Exception as e:
+        # Handle any exceptions that might occur during database interaction
+        print(f"An error occurred: {e}")
+        db.session.rollback()  # Rollback the transaction in case of an error
+        flash("An error occurred while changing order status to Arrived.")
       return redirect(url_for('order_sheet', id=id))
     elif action == "cancelOrder":
-      order = Orders.query.filter_by(id=id).first()
-      order.status = "Canceled"
-      db.session.commit()
+      try:
+        order = Orders.query.filter_by(id=id).first()
+        order.status = "Canceled"
+        db.session.commit()
+      except Exception as e:
+        # Handle any exceptions that might occur during database interaction
+        print(f"An error occurred: {e}")
+        db.session.rollback()  # Rollback the transaction in case of an error
+        flash("An error occurred while changing order status to Canceled.")
       return redirect(url_for('order_sheet', id=id))
     elif action == "addCollegeOrder":
-
-      data = request.form
-      college = User.query.filter_by(name=data['user']).first()
-      menuitem = MenuItem.query.filter_by(description=data['menuitem']).first()
-      orderitems = OrderItem.query.filter_by(order_id=id)
-      user_exists_inorder = orderitems.filter_by(user_id=college.id)
-      if (user_exists_inorder):
-        order_already_exists_inorder = orderitems.filter_by(
-          user_id=college.id, menuitem_id=menuitem.id).first()
-        if (order_already_exists_inorder):
-          if float(data['quantity']) == 0:
-            # print('hello word not delete')
-            db.session.delete(order_already_exists_inorder)
-          else:
-            order_already_exists_inorder.quantity = float(data['quantity'])
-          db.session.commit()
-
-        else:
-          if (float(data['quantity']) == 0):
-            flash("Item does not already exist")
-          else:
-            new_orderitem = OrderItem(order_id=id,
-                                      menuitem_id=menuitem.id,
-                                      user_id=college.id,
-                                      quantity=data['quantity'])
-            db.session.add(new_orderitem)
+      try:
+        data = request.form
+        college = User.query.filter_by(name=data['user']).first()
+        menuitem = MenuItem.query.filter_by(description=data['menuitem']).first()
+        orderitems = OrderItem.query.filter_by(order_id=id)
+        user_exists_inorder = orderitems.filter_by(user_id=college.id)
+        if (user_exists_inorder):
+          order_already_exists_inorder = orderitems.filter_by(
+            user_id=college.id, menuitem_id=menuitem.id).first()
+          if (order_already_exists_inorder):
+            if float(data['quantity']) == 0:
+              # print('hello word not delete')
+              db.session.delete(order_already_exists_inorder)
+            else:
+              order_already_exists_inorder.quantity = float(data['quantity'])
             db.session.commit()
-        # if (data['menuitem'] == orderitems[])
+  
+          else:
+            if (float(data['quantity']) == 0):
+              flash("Item does not already exist")
+            else:
+              new_orderitem = OrderItem(order_id=id,
+                                        menuitem_id=menuitem.id,
+                                        user_id=college.id,
+                                        quantity=data['quantity'])
+              db.session.add(new_orderitem)
+              db.session.commit()
+          # if (data['menuitem'] == orderitems[])
+      except Exception as e:
+        # Handle any exceptions that might occur during database interaction
+        print(f"An error occurred: {e}")
+        db.session.rollback()  # Rollback the transaction in case of an error
+        flash("An error occurred while adding your college order.")
       return redirect(url_for('order_sheet', id=id))
 
   zipped_data = zip(orderitems_uniqueusers, users_items_cost)
@@ -762,64 +842,71 @@ def transfer_wallet():
   # Converting to Egypt time zone
   now_cairo = now_utc.astimezone(timezone('Africa/Cairo'))
   datetime_string = now_cairo.strftime("%d/%m/%Y %I:%M:%S")
+  try:
+    data = request.form
+    # add_transfered_balance_to_user_db(data)
+    # print(data)
+    user_from = User.query.filter_by(name=data['from_user']).first()
+  
+    user_to = User.query.filter_by(name=data['to_user']).first()
+  
+    new_transaction = Transaction(
+      from_user=user_from.name,
+      from_user_balance_before=user_from.volt_balance,
+      from_user_balance_after=float(user_from.volt_balance) -
+      float(data['transfer_amount']),
+      to_user=user_to.name,
+      to_user_balance_before=user_to.volt_balance,
+      to_user_balance_after=float(user_to.volt_balance) +
+      float(data['transfer_amount']),
+      amount=float(data['transfer_amount']),
+      reason=data['transfer_reason'],
+      performed_by=current_user.name,
+      date=datetime_string)
+  
+    user_from.volt_balance = float(user_from.volt_balance) - float(data['transfer_amount'])
+  
+    user_to.volt_balance = float(user_to.volt_balance) + float(data['transfer_amount'])
+    # user_list = [user_from, user_to]
 
-  data = request.form
-  # add_transfered_balance_to_user_db(data)
-  # print(data)
-  user_from = User.query.filter_by(name=data['from_user']).first()
+    
+    db.session.add(new_transaction)
 
-  user_to = User.query.filter_by(name=data['to_user']).first()
+    db.session.commit()
+    msg = Message("TE-Foodies Wallet Transaction",
+                  sender='noreply@tsfoodies',
+                  recipients=[user_from.email])
+    msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
+      'transfer_amount'] + "\n\nWallet Balance Before/After : " + str(
+        float(float(user_from.volt_balance) + float(data['transfer_amount']))
+      ) + " / " + str(
+        float(user_from.volt_balance)
+      ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+    if(user_from.chat_id == None):
+      mail.send(msg)
+    else :
+      bot.send_message(user_from.chat_id, msg.body)
+  
+    msg = Message("TE-Foodies Wallet Transaction",
+                  sender='noreply@tsfoodies',
+                  recipients=[user_to.email])
+    msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
+      'transfer_amount'] + "\n\nWallet Balance Before/After : " + str(
+        float(float(user_to.volt_balance) - float(data['transfer_amount']))
+      ) + " / " + str(
+        float(user_to.volt_balance)
+      ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+    if(user_to.chat_id == None):
+      mail.send(msg)
+    else :
+      bot.send_message(user_to.chat_id, msg.body)
+  
 
-  new_transaction = Transaction(
-    from_user=user_from.name,
-    from_user_balance_before=user_from.volt_balance,
-    from_user_balance_after=float(user_from.volt_balance) -
-    float(data['transfer_amount']),
-    to_user=user_to.name,
-    to_user_balance_before=user_to.volt_balance,
-    to_user_balance_after=float(user_to.volt_balance) +
-    float(data['transfer_amount']),
-    amount=float(data['transfer_amount']),
-    reason=data['transfer_reason'],
-    performed_by=current_user.name,
-    date=datetime_string)
-
-  user_from.volt_balance = float(user_from.volt_balance) - float(data['transfer_amount'])
-
-  user_to.volt_balance = float(user_to.volt_balance) + float(data['transfer_amount'])
-  # user_list = [user_from, user_to]
-  msg = Message("TE-Foodies Wallet Transaction",
-                sender='noreply@tsfoodies',
-                recipients=[user_from.email])
-  msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-    'transfer_amount'] + "\n\nWallet Balance Before/After : " + str(
-      float(float(user_from.volt_balance) + float(data['transfer_amount']))
-    ) + " / " + str(
-      float(user_from.volt_balance)
-    ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-  if(user_from.chat_id == None):
-    mail.send(msg)
-  else :
-    bot.send_message(user_from.chat_id, msg.body)
-
-  msg = Message("TE-Foodies Wallet Transaction",
-                sender='noreply@tsfoodies',
-                recipients=[user_to.email])
-  msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-    'transfer_amount'] + "\n\nWallet Balance Before/After : " + str(
-      float(float(user_to.volt_balance) - float(data['transfer_amount']))
-    ) + " / " + str(
-      float(user_to.volt_balance)
-    ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-  if(user_to.chat_id == None):
-    mail.send(msg)
-  else :
-    bot.send_message(user_to.chat_id, msg.body)
-
-  db.session.add(new_transaction)
-
-  db.session.commit()
-
+  except Exception as e:
+    # Handle any exceptions that might occur during database interaction
+    print(f"An error occurred: {e}")
+    db.session.rollback()  # Rollback the transaction in case of an error
+    flash("An error occurred while transfering to others wallet.")
   return redirect("home")
 
 
@@ -834,64 +921,69 @@ def transfer_money():
   # Converting to Egypt time zone
   now_cairo = now_utc.astimezone(timezone('Africa/Cairo'))
   datetime_string = now_cairo.strftime("%d/%m/%Y %I:%M:%S")
+  try:
+    data = request.form
+    # add_transfered_balance_to_user_db(data)
+    # print(data)
+    user_from = User.query.filter_by(name=data['from_user']).first()
+  
+    user_to = User.query.filter_by(name=data['to_user']).first()
+  
+    new_transaction = Transaction(
+      from_user=user_from.name,
+      from_user_balance_before=user_from.balance,
+      from_user_balance_after=float(user_from.balance) -
+      float(data['transfer_amount']),
+      to_user=user_to.name,
+      to_user_balance_before=user_to.balance,
+      to_user_balance_after=float(user_to.balance) +
+      float(data['transfer_amount']),
+      amount=float(data['transfer_amount']),
+      reason=data['transfer_reason'],
+      performed_by=current_user.name,
+      date=datetime_string)
+  
+    user_from.balance = float(user_from.balance) - float(data['transfer_amount'])
+  
+    user_to.balance = float(user_to.balance) + float(data['transfer_amount'])
+    # user_list = [user_from, user_to]
+    db.session.add(new_transaction)
 
-  data = request.form
-  # add_transfered_balance_to_user_db(data)
-  # print(data)
-  user_from = User.query.filter_by(name=data['from_user']).first()
+    db.session.commit()
+    msg = Message("TE-Foodies Transaction",
+                  sender='noreply@tsfoodies',
+                  recipients=[user_from.email])
+    msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
+      'transfer_amount'] + "\n\nBalance Before/After : " + str(
+        float(float(user_from.balance) + float(data['transfer_amount']))
+      ) + " / " + str(
+        float(user_from.balance)
+      ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+    if(user_from.chat_id == None):
+      mail.send(msg)
+    else :
+      bot.send_message(user_from.chat_id, msg.body)
+  
+    msg = Message("TE-Foodies Transaction",
+                  sender='noreply@tsfoodies',
+                  recipients=[user_to.email])
+    msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
+      'transfer_amount'] + "\n\nBalance Before/After : " + str(
+        float(float(user_to.balance) - float(data['transfer_amount']))
+      ) + " / " + str(
+        float(user_to.balance)
+      ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+    if(user_to.chat_id == None):
+      mail.send(msg)
+    else :
+      bot.send_message(user_to.chat_id, msg.body)
+  
 
-  user_to = User.query.filter_by(name=data['to_user']).first()
-
-  new_transaction = Transaction(
-    from_user=user_from.name,
-    from_user_balance_before=user_from.balance,
-    from_user_balance_after=float(user_from.balance) -
-    float(data['transfer_amount']),
-    to_user=user_to.name,
-    to_user_balance_before=user_to.balance,
-    to_user_balance_after=float(user_to.balance) +
-    float(data['transfer_amount']),
-    amount=float(data['transfer_amount']),
-    reason=data['transfer_reason'],
-    performed_by=current_user.name,
-    date=datetime_string)
-
-  user_from.balance = float(user_from.balance) - float(data['transfer_amount'])
-
-  user_to.balance = float(user_to.balance) + float(data['transfer_amount'])
-  # user_list = [user_from, user_to]
-  msg = Message("TE-Foodies Transaction",
-                sender='noreply@tsfoodies',
-                recipients=[user_from.email])
-  msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-    'transfer_amount'] + "\n\nBalance Before/After : " + str(
-      float(float(user_from.balance) + float(data['transfer_amount']))
-    ) + " / " + str(
-      float(user_from.balance)
-    ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-  if(user_from.chat_id == None):
-    mail.send(msg)
-  else :
-    bot.send_message(user_from.chat_id, msg.body)
-
-  msg = Message("TE-Foodies Transaction",
-                sender='noreply@tsfoodies',
-                recipients=[user_to.email])
-  msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-    'transfer_amount'] + "\n\nBalance Before/After : " + str(
-      float(float(user_to.balance) - float(data['transfer_amount']))
-    ) + " / " + str(
-      float(user_to.balance)
-    ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-  if(user_to.chat_id == None):
-    mail.send(msg)
-  else :
-    bot.send_message(user_to.chat_id, msg.body)
-
-  db.session.add(new_transaction)
-
-  db.session.commit()
-
+  except Exception as e:
+    # Handle any exceptions that might occur during database interaction
+    print(f"An error occurred: {e}")
+    db.session.rollback()  # Rollback the transaction in case of an error
+    flash("An error occurred while transfering the money.")
   return redirect("home")
 
 
@@ -903,56 +995,61 @@ def balance_recharge():
   # Converting to Asia/Kolkata time zone
   now_cairo = now_utc.astimezone(timezone('Africa/Cairo'))
   datetime_string = now_cairo.strftime("%d/%m/%Y %I:%M:%S")
+  try:
+    data = request.form
+  
+    user_to = User.query.filter_by(name=request.form['to_user'].upper()).first()
+    new_transaction = Transaction(to_user=user_to.name,
+                                  to_user_balance_before=user_to.balance,
+                                  to_user_balance_after=float(user_to.balance) +
+                                  float(request.form['transfer_amount']),
+                                  amount=float(request.form['transfer_amount']),
+                                  reason=request.form['transfer_reason'],
+                                  performed_by=current_user.name,
+                                  date=datetime_string)
+  
+    user_to.balance = float(user_to.balance) + float(
+      request.form['transfer_amount'])
+    current_user.volt_balance = float(current_user.volt_balance) + float(
+      request.form['transfer_amount'])
+    db.session.add(new_transaction)
 
-  data = request.form
+    db.session.commit()
+    if (current_user.email != user_to.email):
+      msg = Message("TE-Foodies Balance Transaction",
+                    sender='noreply@tsfoodies',
+                    recipients=[user_to.email, current_user.email])
+    else:
+      msg = Message("TE-Foodies Balance Recharge",
+                    sender='noreply@tsfoodies',
+                    recipients=[user_to.email])
+  
+    msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
+      'transfer_amount'] + "\n\nBalance Before/After : " + str(
+        float(float(user_to.balance) - float(data['transfer_amount']))
+      ) + " / " + str(
+        user_to.balance
+      ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + data[
+        'transfer_reason'] + "\n\nRegards,\nTE-Foodies"
+    # if any user does not have chat id send a mail and send telegram notification
+    if(user_to.chat_id == None or current_user.chat_id == None):
+      mail.send(msg)
+    if (current_user.email != user_to.email):
+      if (user_to.chat_id != None):
+        bot.send_message(user_to.chat_id, msg.body)
+      if (current_user.chat_id != None):
+        bot.send_message(current_user.chat_id, msg.body)
+  
+    else:
+      if (user_to.chat_id != None):
+        bot.send_message(user_to.chat_id, msg.body)
+  
 
-  user_to = User.query.filter_by(name=request.form['to_user'].upper()).first()
-  new_transaction = Transaction(to_user=user_to.name,
-                                to_user_balance_before=user_to.balance,
-                                to_user_balance_after=float(user_to.balance) +
-                                float(request.form['transfer_amount']),
-                                amount=float(request.form['transfer_amount']),
-                                reason=request.form['transfer_reason'],
-                                performed_by=current_user.name,
-                                date=datetime_string)
-
-  user_to.balance = float(user_to.balance) + float(
-    request.form['transfer_amount'])
-  current_user.volt_balance = float(current_user.volt_balance) + float(
-    request.form['transfer_amount'])
-  if (current_user.email != user_to.email):
-    msg = Message("TE-Foodies Balance Transaction",
-                  sender='noreply@tsfoodies',
-                  recipients=[user_to.email, current_user.email])
-  else:
-    msg = Message("TE-Foodies Balance Recharge",
-                  sender='noreply@tsfoodies',
-                  recipients=[user_to.email])
-
-  msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-    'transfer_amount'] + "\n\nBalance Before/After : " + str(
-      float(float(user_to.balance) - float(data['transfer_amount']))
-    ) + " / " + str(
-      user_to.balance
-    ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + data[
-      'transfer_reason'] + "\n\nRegards,\nTE-Foodies"
-  # if any user does not have chat id send a mail and send telegram notification
-  if(user_to.chat_id == None or current_user.chat_id == None):
-    mail.send(msg)
-  if (current_user.email != user_to.email):
-    if (user_to.chat_id != None):
-      bot.send_message(user_to.chat_id, msg.body)
-    if (current_user.chat_id != None):
-      bot.send_message(current_user.chat_id, msg.body)
-
-  else:
-    if (user_to.chat_id != None):
-      bot.send_message(user_to.chat_id, msg.body)
-
-  db.session.add(new_transaction)
-
-  db.session.commit()
-
+  except Exception as e:
+    # Handle any exceptions that might occur during database interaction
+    print(f"An error occurred: {e}")
+    db.session.rollback()  # Rollback the transaction in case of an error
+    flash("An error occurred while recharging user the balance.")
   return redirect("home")
 
 
