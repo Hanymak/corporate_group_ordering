@@ -466,7 +466,7 @@ def create_order():
 
       msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
         'time_to_order'] + " mints" + "\n\nRegards,\nTE-Foodies"
-      if(user.chat_id == None)
+      if(user.chat_id == None):
         mail.send(msg)
       else :
         bot.send_message(user.chat_id, msg.body)
