@@ -423,6 +423,16 @@ def transaction_history():
                          currentUser=current_user)
 
 
+#this function notifies users through telegram notifications only
+@app.route("/telegram_notifications")
+@login_required
+def telegram_notifications():
+  users = load_all_users()
+  # transactions_from_db_descending = sorted(
+  #   transactions_from_db,
+  #   key=lambda item: item['transaction_id'],
+  #   reverse=True)
+  return render_template('telegram_notifications.html', currentUser=current_user)
 #this function populates the Users Details
 @app.route("/users_details")
 @login_required
@@ -450,14 +460,15 @@ def create_order():
 
   for user in users:
     if user.id != current_user.id:
-      msg = Message("TE-Foodies Transaction",
+      msg = Message("TE-Foodies Orders",
                     sender='noreply@tsfoodies',
                     recipients=[user.email])
 
       msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
         'time_to_order'] + " mints" + "\n\nRegards,\nTE-Foodies"
-      mail.send(msg)
-      if (user.chat_id != None):
+      if(user.chat_id == None)
+        mail.send(msg)
+      else :
         bot.send_message(user.chat_id, msg.body)
 
   new_order = Orders(restaurant_id=restaurant.id,
@@ -642,7 +653,7 @@ def order_sheet(id):
           performed_by=current_user.name,
           date=datetime_string)
 
-        msg = Message("TE-Foodies Transaction",
+        msg = Message("TE-Foodies Order Payment Transaction",
                       sender='noreply@tsfoodies',
                       recipients=[user.email])
         amount = -float(cost) - float(delivery_per_user)
@@ -653,9 +664,10 @@ def order_sheet(id):
         ) + " / " + str(
           float(user.balance)
         ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + "Order from " + order_restaurant.name + "\n\nRegards,\nTE-Foodies"
-        mail.send(msg)
-        if (user.chat_id != None):
-          print("hello user here you should find telegram msg")
+        if(user.chat_id == None):
+          mail.send(msg)
+        else :
+          # print("hello user here you should find telegram msg")
           bot.send_message(user.chat_id, msg.body)
         db.session.add(new_transaction)
 
@@ -672,13 +684,14 @@ def order_sheet(id):
       db.session.commit()
       for user in users_inorder:
         if user.id != current_user.id:
-          msg = Message("TE-Foodies Transaction",
+          msg = Message("TE-Foodies Order Arrived",
                         sender='noreply@tsfoodies',
                         recipients=[user.email])
 
-          msg.body = "Dears,\n\nKindly be noted that your has arrived at " + order.dining_room + "\n\nRegards,\nTE-Foodies"
-          mail.send(msg)
-          if (user.chat_id != None):
+          msg.body = "Dears,\n\nKindly be noted that your order has arrived at " + order.dining_room + "\n\nRegards,\nTE-Foodies"
+          if(user.chat_id == None):
+            mail.send(msg)
+          else :
             bot.send_message(user.chat_id, msg.body)
 
       return redirect(url_for('order_sheet', id=id))
@@ -775,7 +788,7 @@ def transfer_wallet():
 
   user_to.volt_balance = float(user_to.volt_balance) + float(data['transfer_amount'])
   # user_list = [user_from, user_to]
-  msg = Message("TE-Foodies Transaction",
+  msg = Message("TE-Foodies Wallet Transaction",
                 sender='noreply@tsfoodies',
                 recipients=[user_from.email])
   msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
@@ -784,11 +797,12 @@ def transfer_wallet():
     ) + " / " + str(
       float(user_from.volt_balance)
     ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-  mail.send(msg)
-  if (user_from.chat_id != None):
+  if(user_from.chat_id == None):
+    mail.send(msg)
+  else :
     bot.send_message(user_from.chat_id, msg.body)
 
-  msg = Message("TE-Foodies Transaction",
+  msg = Message("TE-Foodies Wallet Transaction",
                 sender='noreply@tsfoodies',
                 recipients=[user_to.email])
   msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
@@ -797,8 +811,9 @@ def transfer_wallet():
     ) + " / " + str(
       float(user_to.volt_balance)
     ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-  mail.send(msg)
-  if (user_to.chat_id != None):
+  if(user_to.chat_id == None):
+    mail.send(msg)
+  else :
     bot.send_message(user_to.chat_id, msg.body)
 
   db.session.add(new_transaction)
@@ -854,8 +869,9 @@ def transfer_money():
     ) + " / " + str(
       float(user_from.balance)
     ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-  mail.send(msg)
-  if (user_from.chat_id != None):
+  if(user_from.chat_id == None):
+    mail.send(msg)
+  else :
     bot.send_message(user_from.chat_id, msg.body)
 
   msg = Message("TE-Foodies Transaction",
@@ -867,8 +883,9 @@ def transfer_money():
     ) + " / " + str(
       float(user_to.balance)
     ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-  mail.send(msg)
-  if (user_to.chat_id != None):
+  if(user_to.chat_id == None):
+    mail.send(msg)
+  else :
     bot.send_message(user_to.chat_id, msg.body)
 
   db.session.add(new_transaction)
@@ -904,11 +921,11 @@ def balance_recharge():
   current_user.volt_balance = float(current_user.volt_balance) + float(
     request.form['transfer_amount'])
   if (current_user.email != user_to.email):
-    msg = Message("TE-Foodies Transaction",
+    msg = Message("TE-Foodies Balance Transaction",
                   sender='noreply@tsfoodies',
                   recipients=[user_to.email, current_user.email])
   else:
-    msg = Message("TE-Foodies Transaction",
+    msg = Message("TE-Foodies Balance Recharge",
                   sender='noreply@tsfoodies',
                   recipients=[user_to.email])
 
@@ -919,7 +936,9 @@ def balance_recharge():
       user_to.balance
     ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + data[
       'transfer_reason'] + "\n\nRegards,\nTE-Foodies"
-  mail.send(msg)
+  # if any user does not have chat id send a mail and send telegram notification
+  if(user_to.chat_id == None or current_user.chat_id == None):
+    mail.send(msg)
   if (current_user.email != user_to.email):
     if (user_to.chat_id != None):
       bot.send_message(user_to.chat_id, msg.body)
