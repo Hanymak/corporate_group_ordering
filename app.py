@@ -46,7 +46,7 @@ bot.remove_webhook()
 render_web_hook = os.environ['render_web_hook']
 render_web_hook_route = os.environ['render_web_hook_route']
 
-bot.set_webhook(url=render_web_hook)
+bot.set_webhook(url='https://tefoodies.fun/api')
 # BOT_TOKEN = os.environ['API_KEY']
 # BOT_INTERVAL = 3
 # BOT_TIMEOUT = 30
@@ -229,7 +229,7 @@ class OrderItem(db.Model):
   quantity = db.Column(db.Numeric(10, 2), nullable=False)
 
 # https://api.render.com/deploy/srv-chanvhvdvk4lphpafoa0?key=kOD17K-MDEs
-@app.route(render_web_hook_route, methods=['Get', 'POST'])
+@app.route('/api', methods=['Get', 'POST'])
 def webhook():
   json_str = request.get_data().decode('UTF-8')
   update = telebot.types.Update.de_json(json_str)
