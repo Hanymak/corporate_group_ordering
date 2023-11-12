@@ -43,7 +43,10 @@ app = Flask(__name__)
 bot = telebot.TeleBot(os.environ['API_KEY'])
 
 bot.remove_webhook()
-bot.set_webhook(url="https://api.render.com/deploy/srv-chanvhvdvk4lphpafoa0?key=kOD17K-MDEs")
+render_web_hook = os.environ['render_web_hook']
+render_web_hook_route = os.environ['render_web_hook_route']
+
+bot.set_webhook(url=render_web_hook)
 # BOT_TOKEN = os.environ['API_KEY']
 # BOT_INTERVAL = 3
 # BOT_TIMEOUT = 30
@@ -85,7 +88,7 @@ if Debug:
   db_connection_string = os.environ['DB_CONNECTION_STRING_TEST_BRANCH']
 else:
   db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
-db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
+# db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
 #mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
@@ -225,8 +228,8 @@ class OrderItem(db.Model):
   user_id = db.Column(db.Integer, nullable=False)
   quantity = db.Column(db.Numeric(10, 2), nullable=False)
 
-
-@app.route('/api', methods=['Get', 'POST'])
+# https://api.render.com/deploy/srv-chanvhvdvk4lphpafoa0?key=kOD17K-MDEs
+@app.route(render_web_hook_route, methods=['Get', 'POST'])
 def webhook():
   json_str = request.get_data().decode('UTF-8')
   update = telebot.types.Update.de_json(json_str)
