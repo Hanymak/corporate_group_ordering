@@ -88,7 +88,7 @@ if Debug:
   db_connection_string = os.environ['DB_CONNECTION_STRING_TEST_BRANCH']
 else:
   db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
-# db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
+db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
 #mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
