@@ -43,7 +43,7 @@ app = Flask(__name__)
 bot = telebot.TeleBot(os.environ['API_KEY'])
 
 bot.remove_webhook()
-bot.set_webhook(url="https://tefoodies.fun/api")
+bot.set_webhook(url="https://api.render.com/deploy/srv-chanvhvdvk4lphpafoa0?key=kOD17K-MDEs")
 # BOT_TOKEN = os.environ['API_KEY']
 # BOT_INTERVAL = 3
 # BOT_TIMEOUT = 30
