@@ -46,7 +46,10 @@ bot.remove_webhook()
 render_web_hook = os.environ['render_web_hook']
 render_web_hook_route = os.environ['render_web_hook_route']
 
-bot.set_webhook(url=render_web_hook)
+bot.set_webhook(url=render_web_hook,allowed_updates=["message", "callback_query"])
+# bot.set_webhook(url='https://corporategroupordering-1--hanymak.repl.co/api')
+
+print(bot.get_webhook_info())
 # bot.set_webhook(url='https://tefoodies.fun/api')
 
 # BOT_TOKEN = os.environ['API_KEY']
@@ -74,6 +77,7 @@ bot.set_webhook(url=render_web_hook)
 #       bot.stop_polling()
 #       print("Bot polling loop finished")
 #       break  #End loop
+
 
 # def botactions():
 #   #Set all your bot handlers inside this function
