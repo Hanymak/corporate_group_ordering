@@ -40,7 +40,7 @@ app = Flask(__name__)
 
 # cache = Cache(app)
 
-bot = telebot.TeleBot(os.environ['API_KEY'])
+bot = telebot.TeleBot(os.environ['API_KEY'], threaded=False)
 
 bot.remove_webhook()
 render_web_hook = os.environ['render_web_hook']
@@ -1251,7 +1251,7 @@ def registration_complete():
 if __name__ == "__main__":
   # telegram_main()
 
-  app.run(host='0.0.0.0', debug=False)
+  app.run(host='0.0.0.0', debug=True)
 
   # while True:
   #   try:
