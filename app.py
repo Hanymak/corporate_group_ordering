@@ -537,16 +537,7 @@ def create_order():
                        date=datetime_string)
     db.session.add(new_order)
     # db.session.commit()
-    for user in users:
-      if user.id != current_user.id:
-        msg = Message("TE-Foodies Orders",
-                      sender='noreply@tsfoodies',
-                      recipients=[user.email])
 
-        msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
-          'time_to_order'] + " mints" + "\n\n Place your order from: https://www.tefoodies.fun/order_sheet/" + str(
-            new_order.id) + "\n\nRegards,\nTE-Foodies"
-        send_notification(user, msg)
   except Exception as e:
     # Handle any exceptions that might occur during database interaction
     print(f"An error occurred: {e}")
@@ -567,6 +558,16 @@ def create_order():
 
   else:
     db.session.commit()
+    for user in users:
+      if user.id != current_user.id:
+        msg = Message("TE-Foodies Orders",
+                      sender='noreply@tsfoodies',
+                      recipients=[user.email])
+
+        msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
+          'time_to_order'] + " mints" + "\n\n Place your order from: https://www.tefoodies.fun/order_sheet/" + str(
+            new_order.id) + "\n\nRegards,\nTE-Foodies"
+        send_notification(user, msg)
     return redirect("/order_sheet/{}".format(new_order.id))
 
 
