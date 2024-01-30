@@ -111,7 +111,7 @@ if Debug:
   db_connection_string = os.environ['DB_CONNECTION_STRING_TEST_BRANCH']
 else:
   db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
-db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
+# db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
 #mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
@@ -989,63 +989,77 @@ def transfer_money():
   # Converting to Egypt time zone
   now_cairo = now_utc.astimezone(timezone('Africa/Cairo'))
   datetime_string = now_cairo.strftime("%d/%m/%Y %I:%M:%S")
+  transactions = []
   try:
     data = request.form
-    # add_transfered_balance_to_user_db(data)
-    # print(data)
-    user_from = User.query.filter_by(name=data['from_user']).first()
-
     user_to = User.query.filter_by(name=data['to_user']).first()
+    for key, value in data.items():
+      print(key, value)
+      if key.startswith('from_user_'):
+        from_user_count = key.replace('from_user_', '')
+        transfer_amount = "{:.2f}".format(
+          float(data.get(f'transfer_amount_{from_user_count}')))
+        # print(from_user_count, transfer_amount)
+        # Check if the value is not null or empty
+        if value:
+          # Process the form data when from_user is not null
+          user_from = User.query.filter_by(name=value).first()
+          new_transaction = Transaction(
+            from_user=user_from.name,
+            from_user_balance_before=user_from.balance,
+            from_user_balance_after=float(user_from.balance) -
+            float(transfer_amount),
+            to_user=user_to.name,
+            to_user_balance_before=user_to.balance,
+            to_user_balance_after=float(user_to.balance) +
+            float(transfer_amount),
+            amount=float(transfer_amount),
+            reason=data['transfer_reason'],
+            performed_by=current_user.name,
+            date=datetime_string)
+          user_from.balance = float(user_from.balance) - float(transfer_amount)
 
-    new_transaction = Transaction(
-      from_user=user_from.name,
-      from_user_balance_before=user_from.balance,
-      from_user_balance_after=float(user_from.balance) -
-      float(data['transfer_amount']),
-      to_user=user_to.name,
-      to_user_balance_before=user_to.balance,
-      to_user_balance_after=float(user_to.balance) +
-      float(data['transfer_amount']),
-      amount=float(data['transfer_amount']),
-      reason=data['transfer_reason'],
-      performed_by=current_user.name,
-      date=datetime_string)
+          user_to.balance = float(user_to.balance) + float(transfer_amount)
+          # user_list = [user_from, user_to]
+          print(new_transaction)
+          print(user_from.balance)
+          print(user_to.balance)
+          transactions.append(new_transaction)
+          msg = Message("TE-Foodies Transaction",
+                        sender='noreply@tsfoodies',
+                        recipients=[user_from.email])
+          msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + transfer_amount + "\n\nBalance Before/After : " + str(
+            float(float(user_from.balance) + float(transfer_amount))
+          ) + " / " + str(
+            float(user_from.balance)
+          ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+          if (user_from.chat_id == None):
+            mail.send(msg)
+          else:
+            bot.send_message(user_from.chat_id, msg.body)
 
-    user_from.balance = float(user_from.balance) - float(
-      data['transfer_amount'])
+          msg = Message("TE-Foodies Transaction",
+                        sender='noreply@tsfoodies',
+                        recipients=[user_to.email])
+          msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + transfer_amount + "\n\nBalance Before/After : " + str(
+            float(float(user_to.balance) - float(transfer_amount))
+          ) + " / " + str(
+            float(user_to.balance)
+          ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+          if (user_to.chat_id == None):
+            mail.send(msg)
+          else:
+            bot.send_message(user_to.chat_id, msg.body)
 
-    user_to.balance = float(user_to.balance) + float(data['transfer_amount'])
-    # user_list = [user_from, user_to]
-    db.session.add(new_transaction)
+        else:
+          # Handle the case when from_user is null or empty
+          flash('Error: "from_user" cannot be null or empty', 'error')
+          # Optionally, you can redirect the user to an error page or render the form again.
+          # return redirect(url_for('your_form_route'))
+    # print("HI")
+    db.session.add_all(transactions)
 
     # db.session.commit()
-    msg = Message("TE-Foodies Transaction",
-                  sender='noreply@tsfoodies',
-                  recipients=[user_from.email])
-    msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-      'transfer_amount'] + "\n\nBalance Before/After : " + str(
-        float(float(user_from.balance) + float(data['transfer_amount']))
-      ) + " / " + str(
-        float(user_from.balance)
-      ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-    if (user_from.chat_id == None):
-      mail.send(msg)
-    else:
-      bot.send_message(user_from.chat_id, msg.body)
-
-    msg = Message("TE-Foodies Transaction",
-                  sender='noreply@tsfoodies',
-                  recipients=[user_to.email])
-    msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-      'transfer_amount'] + "\n\nBalance Before/After : " + str(
-        float(float(user_to.balance) - float(data['transfer_amount']))
-      ) + " / " + str(
-        float(user_to.balance)
-      ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
-    if (user_to.chat_id == None):
-      mail.send(msg)
-    else:
-      bot.send_message(user_to.chat_id, msg.body)
 
   except Exception as e:
     # Handle any exceptions that might occur during database interaction

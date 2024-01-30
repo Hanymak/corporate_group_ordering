@@ -1,4 +1,105 @@
 <script>
+  var selectBoxCounter = 1; // Initialize counter
+
+  function addNew() {
+    // Get the main Div in which all the other divs will be added
+    var mainContainer = document.getElementById('mainContainer');
+
+    // Create a new div for holding text and button input elements
+    var newDiv = document.createElement('div');
+
+    // Create a new text input
+    var newSelectBox = document.createElement('select');
+    newSelectBox.name = 'from_user_' + selectBoxCounter; // Set name attribute
+    newSelectBox.required = true;
+
+    // Add "Select your option" option to the dropdown
+    var defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.text = 'Select your option';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    newSelectBox.add(defaultOption);
+
+    {% for user in users %};
+    var newOption = document.createElement('option');
+    newOption.value = "{{ user["name"] }}";
+    newOption.text = "{{ user["name"] }}";
+    newSelectBox.add(newOption);
+    var input = document.createElement("input");
+    input.type = "number";
+    input.step = ".01";
+    input.min = "-9999.99";
+    input.max = "9999.99";
+    input.required = true;
+    input.name = "transfer_amount_" + selectBoxCounter; // Set name attribute
+    {% endfor %};
+
+    // Set margins or paddings to create space
+    newSelectBox.style.marginTop = '10px';
+    newSelectBox.style.marginRight = '10px'; // Adjust the spacing as needed
+    input.style.marginLeft = '10px'; // Adjust the spacing as needed
+
+    // Create buttons for creating and removing inputs
+    var newAddButton = document.createElement('input');
+    newAddButton.type = "button";
+    newAddButton.value = " + ";
+
+    var newDelButton = document.createElement('input');
+    newDelButton.type = "button";
+    newDelButton.value = " - ";
+
+    // Append new text input to the newDiv
+    newDiv.appendChild(newSelectBox);
+    newDiv.appendChild(input);
+    // Append new button inputs to the newDiv
+    newDiv.appendChild(newAddButton);
+    newDiv.appendChild(newDelButton);
+
+    // Append newDiv input to the mainContainer div
+    mainContainer.appendChild(newDiv);
+
+    // Add a handler to button for deleting the newDiv from the mainContainer
+    newAddButton.onclick = addNew;
+
+    newDelButton.onclick = function() {
+      mainContainer.removeChild(newDiv);
+    };
+
+    // Increment the counter for the next dropdown
+    selectBoxCounter++;
+
+    // Set up the event listener with an anonymous function
+    newSelectBox.addEventListener("change", function (event) {
+      prevent_duplicate_selection(event, newSelectBox);
+    });
+  }
+
+  function getAllSelectValues() {
+    var allSelectBoxes = document.getElementsByTagName('select');
+    var selectedValues = [];
+
+    for (var i = 0; i < allSelectBoxes.length; i++) {
+      var selectBox = allSelectBoxes[i];
+      selectedValues.push(selectBox.value);
+    }
+
+    return selectedValues;
+  }
+
+  function prevent_duplicate_selection(event, selectBox) {
+    var selectedValues = getAllSelectValues();
+    var selectedValue = selectBox.value;
+
+    if (selectedValues.filter(value => value === selectedValue).length > 1) {
+      alert('User is already selected in another dropdown!');
+
+      // Reset the value to an empty string or the default value
+      selectBox.value = '';
+    }
+  }
+</script>
+<script>
   function handleClick(button) {
       // Disable the button
       button.disabled = true;
@@ -35,13 +136,14 @@
 
 
 						<div class="modal-body">
-
-
               <form action="/money_transfer"  method="post">
+                <container class="col-xlg-12 mx-auto" style="margin-top:5%;"  id="mainContainer">
+                  
 
-                <label>Transfer from :
+                <label style="margin-top:5%;">Transfer from :
+                  <div class="input-group  mb-3 ">
                  {% if currentUser['admin']%}
-                 <select required  name="from_user" id="selectBox1" onchange="remove_duplicate_selection();" >
+                 <select required  name="from_user_0" id="select" onchange="prevent_duplicate_selection(null,this);" >
                   <option value="" disabled selected>Select your option</option>
                   {% for user in users %}
 
@@ -50,17 +152,34 @@
 
                   {% endfor %}
                   {% else %} 
-                  <select name="from_user" id="selectBox1" >
+                  <select name="from_user_0" id="select" >
                     <option value="{{currentUser['name']}}" selected>{{currentUser['name']}}</option>
                     {% endif %}   
                   </select>
-
+                   </div>
                 </label>
 
+                    <label>Amount :
+                      <div class="input-group mb-3">
+                        <span class="input-group-text">$</span>
+                        <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount_0" class="form-control" aria-label="Amount (to the nearest dollar)">
+                        <span class="input-group-text">.00</span>
+                      </div>
+
+
+                      </label>
+
+                  {% if currentUser['admin']%}
+                      <input type="button" value=" + " onClick="addNew();">
+                  {% endif %}
+                      </container>
+
+                <br>
+                 
+                  
 
                 <label style="margin-top:5%;">Transfer to :
-
-                  <select name="to_user" id="selectBox2"  required >
+                  <select name="to_user" id="select" onchange="prevent_duplicate_selection(null,this);" required >
 
                     <option value="" disabled selected>Select your option</option>
                     {% for user in users %}
@@ -75,27 +194,22 @@
                     {% endfor %}
 
                   </select>
-
                 </label>
-                <br><br>
-                <label>Amount :
-                <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
-                  <div class="input-group mb-3">
-                    <span class="input-group-text">$</span>
-                    <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount" class="form-control" aria-label="Amount (to the nearest dollar)">
-                    <span class="input-group-text">.00</span>
-                  </div>
+
+              
 
 
 
+
+
+                
                   <div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
                     <span  class="input-group-text">Transfer Reason</span>
                     <textarea maxlength = 50 name="transfer_reason" required  class="form-control" aria-label="With textarea"></textarea>
                   </div>
 
 
-                </container>
-                </label>
+                
 
                 <!-- name = "transfer" value="Transfer" -->
 
@@ -152,3 +266,4 @@
 
         </div>
       </div>
+
