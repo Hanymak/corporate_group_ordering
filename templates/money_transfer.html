@@ -1,17 +1,19 @@
+
 <script>
   var selectBoxCounter = 1; // Initialize counter
 
   function addNew() {
     // Get the main Div in which all the other divs will be added
     var mainContainer = document.getElementById('mainContainer');
-
+    mainContainer.className="col-xlg-12 mx-auto";
     // Create a new div for holding text and button input elements
     var newDiv = document.createElement('div');
-
+      newDiv.className = 'input-group mb-3';
     // Create a new text input
     var newSelectBox = document.createElement('select');
     newSelectBox.name = 'from_user_' + selectBoxCounter; // Set name attribute
     newSelectBox.required = true;
+    newSelectBox.className = 'selectpicker form-control';
 
     // Add "Select your option" option to the dropdown
     var defaultOption = document.createElement('option');
@@ -20,12 +22,17 @@
     defaultOption.disabled = true;
     defaultOption.selected = true;
     newSelectBox.add(defaultOption);
-
     {% for user in users %};
     var newOption = document.createElement('option');
     newOption.value = "{{ user["name"] }}";
     newOption.text = "{{ user["name"] }}";
     newSelectBox.add(newOption);
+    {% endfor %};
+    var inputGroup = document.createElement('div');
+    inputGroup.className = 'input-group mb-3';
+    var spanInputGroup = document.createElement('span');
+    spanInputGroup.className = 'input-group-text';
+    spanInputGroup.textContent = '$';
     var input = document.createElement("input");
     input.type = "number";
     input.step = ".01";
@@ -33,12 +40,16 @@
     input.max = "9999.99";
     input.required = true;
     input.name = "transfer_amount_" + selectBoxCounter; // Set name attribute
-    {% endfor %};
+    input.className = 'form-control';
+    input.setAttribute('aria-label', 'Amount (to the nearest dollar)');
+    var spanInputGroup2 = document.createElement('span');
+    spanInputGroup2.className = 'input-group-text';
+    spanInputGroup2.textContent = '.00';
 
     // Set margins or paddings to create space
-    newSelectBox.style.marginTop = '10px';
-    newSelectBox.style.marginRight = '10px'; // Adjust the spacing as needed
-    input.style.marginLeft = '10px'; // Adjust the spacing as needed
+    // newSelectBox.style.marginBottom = '10px';
+    // newSelectBox.style.marginRight = '10px'; // Adjust the spacing as needed
+    // spanInputGroup2.style.marginLeft = '10px'; // Adjust the spacing as needed
 
     // Create buttons for creating and removing inputs
     var newAddButton = document.createElement('input');
@@ -51,13 +62,18 @@
 
     // Append new text input to the newDiv
     newDiv.appendChild(newSelectBox);
-    newDiv.appendChild(input);
+      newDiv.appendChild(spanInputGroup);
+      newDiv.appendChild(input);
+      newDiv.appendChild(spanInputGroup2);
+    // spanInputGroup.appendChild(input);
+    // newDiv.appendChild(inputGroup);
     // Append new button inputs to the newDiv
-    newDiv.appendChild(newAddButton);
-    newDiv.appendChild(newDelButton);
+        // newDiv.appendChild(newAddButton);
+        newDiv.appendChild(newDelButton);
 
     // Append newDiv input to the mainContainer div
     mainContainer.appendChild(newDiv);
+    // mainContainer.appendChild(inputGroup);
 
     // Add a handler to button for deleting the newDiv from the mainContainer
     newAddButton.onclick = addNew;
@@ -124,26 +140,28 @@
   }
 </script>
 <!-- Modal -->
-			<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-				<div class="modal-dialog modal-dialog-centered">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h1 class="modal-title fs-5" id="exampleModalLabel">Transfer Money</h1>
-							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
-						</div>
+      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel">Transfer Money</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+            </div>
 
 
 
 
-						<div class="modal-body">
+            <div class="modal-body">
               <form action="/money_transfer"  method="post">
-                <container class="col-xlg-12 mx-auto" style="margin-top:5%;"  id="mainContainer">
-                  
+                <container class="col-xlg-12 mx-auto"   id="mainContainer">
 
-                <label style="margin-top:5%;">Transfer from :
-                  <div class="input-group  mb-3 ">
+
+                  <label style="margin-top:5%;">Transfer from
+                    </label>
+                    <br>
+                  <div style="margin-top:5%;" class="input-group  mb-3 ">
                  {% if currentUser['admin']%}
-                 <select required  name="from_user_0" id="select" onchange="prevent_duplicate_selection(null,this);" >
+                 <select  required class="selectpicker form-control" name="from_user_0" id="select" onchange="prevent_duplicate_selection(null,this);" >
                   <option value="" disabled selected>Select your option</option>
                   {% for user in users %}
 
@@ -152,34 +170,37 @@
 
                   {% endfor %}
                   {% else %} 
-                  <select name="from_user_0" id="select" >
+                  <select class="selectpicker form-control" name="from_user_0" id="select" >
                     <option value="{{currentUser['name']}}" selected>{{currentUser['name']}}</option>
                     {% endif %}   
                   </select>
-                   </div>
-                </label>
 
-                    <label>Amount :
-                      <div class="input-group mb-3">
+
+
+
+
                         <span class="input-group-text">$</span>
-                        <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount_0" class="form-control" aria-label="Amount (to the nearest dollar)">
+                        <input type="number" step=".01" min=-9999.99 max=9999.99 required id="salary" name="transfer_amount_0" class="form-control " aria-label="Amount (to the nearest dollar)">
                         <span class="input-group-text">.00</span>
+                   {% if currentUser['admin'] %}
+                    <input type="button" value=" + " onClick="addNew();">
+                   {% endif %}
                       </div>
 
 
-                      </label>
 
-                  {% if currentUser['admin']%}
-                      <input type="button" value=" + " onClick="addNew();">
-                  {% endif %}
+
+
                       </container>
 
                 <br>
-                 
-                  
 
-                <label style="margin-top:5%;">Transfer to :
-                  <select name="to_user" id="select" onchange="prevent_duplicate_selection(null,this);" required >
+
+
+                <label >Transfer to
+                  </label>
+                  <br>
+                  <select style="margin-top:5%;" class="selectpicker form-control" name="to_user" id="select" onchange="prevent_duplicate_selection(null,this);" required >
 
                     <option value="" disabled selected>Select your option</option>
                     {% for user in users %}
@@ -194,22 +215,22 @@
                     {% endfor %}
 
                   </select>
-                </label>
-
-              
-
-
-
-
-
                 
+
+
+
+
+
+
+
+
                   <div class="input-group" style="margin-top : 5%; margin-bottom : 5%;" >
                     <span  class="input-group-text">Transfer Reason</span>
                     <textarea maxlength = 50 name="transfer_reason" required  class="form-control" aria-label="With textarea"></textarea>
                   </div>
 
 
-                
+
 
                 <!-- name = "transfer" value="Transfer" -->
 

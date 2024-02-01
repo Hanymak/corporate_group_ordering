@@ -47,7 +47,7 @@ with app.app_context():
   render_web_hook = os.environ['render_web_hook']
   render_web_hook_route = os.environ['render_web_hook_route']
 
-  bot.set_webhook(url='https://bc8a-197-36-176-176.ngrok-free.app:80',
+  bot.set_webhook(url='https://tefoodies.fun/api',
                   allowed_updates=["message", "callback_query"])
   # bot.set_webhook(url='https://corporategroupordering-1--hanymak.repl.co/api')
 
@@ -253,7 +253,7 @@ class OrderItem(db.Model):
 
 
 # https://api.render.com/deploy/srv-chanvhvdvk4lphpafoa0?key=kOD17K-MDEs
-@app.route('/bc8a-197-36-176-176.ngrok-free.app', methods=['POST'])
+@app.route('/api', methods=['POST'])
 def webhook():
   try:
     json_str = request.get_data().decode('UTF-8')
