@@ -41,15 +41,7 @@ app = Flask(__name__)
 
 # cache = Cache(app)
 
-bot = telebot.TeleBot(os.environ['API_KEY'], threaded=False)
-with app.app_context():
-  bot.remove_webhook()
-  render_web_hook = os.environ['render_web_hook']
-  render_web_hook_route = os.environ['render_web_hook_route']
-
-  bot.set_webhook(url='https://tefoodies.fun/api',
-                  allowed_updates=["message", "callback_query"])
-  # bot.set_webhook(url='https://corporategroupordering-1--hanymak.repl.co/api')
+# bot.set_webhook(url='https://corporategroupordering-1--hanymak.repl.co/api')
 
 #   print(bot.get_webhook_info())
 # with app.app_context():
@@ -111,7 +103,7 @@ if Debug:
   db_connection_string = os.environ['DB_CONNECTION_STRING_TEST_BRANCH']
 else:
   db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
-db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
+# db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
 #mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
@@ -252,24 +244,7 @@ class OrderItem(db.Model):
   quantity = db.Column(db.Numeric(10, 2), nullable=False)
 
 
-# https://api.render.com/deploy/srv-chanvhvdvk4lphpafoa0?key=kOD17K-MDEs
-@app.route('/api', methods=['POST'])
-def webhook():
-  try:
-    json_str = request.get_data().decode('UTF-8')
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
-    return '', 200
-  except json.JSONDecodeError as e:
-    print(f"JSON decoding error: {e}")
-    return 'Bad Request - Invalid JSON', 400
-
-
-@bot.message_handler(commands=['start', 'help'])
-def send_welcome(message):
-  bot.send_message(message.chat.id,
-                   "Welcome to tefoodies bot!\nPlease enter the token")
-
+# bot = telebot.TeleBot(os.environ['API_KEY'], threaded=False)
 
 with app.app_context():
 
@@ -321,7 +296,6 @@ RETRY_DELAY_SECONDS = 10
 
 # print(generate_random_pattern(5))
 
-
 # def load_transactions_from_db():
 #   with engine.connect() as conn:
 #     result = conn.execution_options(stream_results=True).execute(
@@ -340,6 +314,37 @@ RETRY_DELAY_SECONDS = 10
 #     return message.chat.id
 #   else:
 #     return None
+bot = telebot.TeleBot(os.environ['API_KEY'], threaded=False)
+
+with app.app_context():
+  bot.remove_webhook()
+  #webhook name must have www. in front of it
+
+  bot.set_webhook(url="https://www.tefoodies.fun/api",
+                  allowed_updates=["message", "callback_query"])
+
+
+# https://api.render.com/deploy/srv-chanvhvdvk4lphpafoa0?key=kOD17K-MDEs
+@app.route("/api", methods=['POST'])
+def webhook():
+  try:
+    print("hi")
+    json_str = request.get_data().decode('UTF-8')
+    update = telebot.types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return '', 200
+  except json.JSONDecodeError as e:
+    print(f"JSON decoding error: {e}")
+    return 'Bad Request - Invalid JSON', 400
+
+
+@bot.message_handler(commands=['start', 'help'])
+def send_welcome(message):
+
+  bot.send_message(message.chat.id,
+                   "Welcome to tefoodies bot!\nPlease enter the token")
+
+
 def send_telegram_bot_message(chat_id, message):
   try:
     with app.app_context():
@@ -389,16 +394,18 @@ def handle_specific_text(message):
   user = check_for_pattern(message)
 
   if user:
-    try:
-      with app.app_context():
+
+    with app.app_context():
+      try:
         curr_user = User.query.filter_by(id=user.id).first()
         curr_user.chat_id = message.chat.id
+
+      except Exception as e:
+        print(f"An exception occurred: {e}")
+      else:
         db.session.commit()
         bot.send_message(message.chat.id,
                          "Hello " + user.name + ", Welcome to tefoodies bot")
-
-    except Exception as e:
-      print(f"An exception occurred: {e}")
 
 
 @app.route("/order_history", methods=['GET', 'POST'])
@@ -1325,7 +1332,7 @@ def registration_complete():
 if __name__ == "__main__":
   # telegram_main()
 
-  app.run(host='0.0.0.0', debug=True)
+  app.run(host='0.0.0.0', debug=False)
 
   # while True:
   #   try:
