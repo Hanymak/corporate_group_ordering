@@ -662,43 +662,46 @@ def order_sheet(id):
     action = request.form.get("action")
 
     if action == "addOrder":
-      try:
-        data = request.form
-        menuitem = MenuItem.query.filter_by(
-          description=data['menuitem'], restaurant_id=restaurant_id).first()
+      if float(current_user.balance) > float(-50.0):
+        try:
+          data = request.form
+          menuitem = MenuItem.query.filter_by(
+            description=data['menuitem'], restaurant_id=restaurant_id).first()
 
-        orderitems = OrderItem.query.filter_by(order_id=id)
-        user_exists_inorder = orderitems.filter_by(user_id=current_user.id)
-        if (user_exists_inorder):
-          order_already_exists_inorder = orderitems.filter_by(
-            user_id=current_user.id, menuitem_id=menuitem.id).first()
-          if (order_already_exists_inorder):
-            if float(data['quantity']) == 0:
-              # print('hello word not delete')
-              db.session.delete(order_already_exists_inorder)
-            else:
-              order_already_exists_inorder.quantity = float(data['quantity'])
-            # db.session.commit()
-
-          else:
-            if (float(data['quantity']) == 0):
-              flash("Item does not already exist")
-            else:
-              new_orderitem = OrderItem(order_id=id,
-                                        menuitem_id=menuitem.id,
-                                        user_id=current_user.id,
-                                        quantity=data['quantity'])
-              print(new_orderitem)
-              db.session.add(new_orderitem)
+          orderitems = OrderItem.query.filter_by(order_id=id)
+          user_exists_inorder = orderitems.filter_by(user_id=current_user.id)
+          if (user_exists_inorder):
+            order_already_exists_inorder = orderitems.filter_by(
+              user_id=current_user.id, menuitem_id=menuitem.id).first()
+            if (order_already_exists_inorder):
+              if float(data['quantity']) == 0:
+                # print('hello word not delete')
+                db.session.delete(order_already_exists_inorder)
+              else:
+                order_already_exists_inorder.quantity = float(data['quantity'])
               # db.session.commit()
-      except Exception as e:
-        # Handle any exceptions that might occur during database interaction
-        print(f"An error occurred: {e}")
-        db.session.rollback()  # Rollback the transaction in case of an error
-        flash("An error occurred while adding the order item.")
+
+            else:
+              if (float(data['quantity']) == 0):
+                flash("Item does not already exist")
+              else:
+                new_orderitem = OrderItem(order_id=id,
+                                          menuitem_id=menuitem.id,
+                                          user_id=current_user.id,
+                                          quantity=data['quantity'])
+                print(new_orderitem)
+                db.session.add(new_orderitem)
+                # db.session.commit()
+        except Exception as e:
+          # Handle any exceptions that might occur during database interaction
+          print(f"An error occurred: {e}")
+          db.session.rollback()  # Rollback the transaction in case of an error
+          flash("An error occurred while adding the order item.")
+        else:
+          db.session.commit()
+        # if (data['menuitem'] == orderitems[])
       else:
-        db.session.commit()
-      # if (data['menuitem'] == orderitems[])
+        flash("Your balance is insufficient to place your order")
       return redirect(url_for('order_sheet', id=id))
     elif action == "updateItemPrice":
       try:
@@ -846,43 +849,45 @@ def order_sheet(id):
 
       return redirect(url_for('order_sheet', id=id))
     elif action == "addCollegeOrder":
-      try:
-        data = request.form
-        college = User.query.filter_by(name=data['user']).first()
-        menuitem = MenuItem.query.filter_by(
-          description=data['menuitem'], restaurant_id=restaurant_id).first()
-        orderitems = OrderItem.query.filter_by(order_id=id)
-        user_exists_inorder = orderitems.filter_by(user_id=college.id)
-        if (user_exists_inorder):
-          order_already_exists_inorder = orderitems.filter_by(
-            user_id=college.id, menuitem_id=menuitem.id).first()
-          if (order_already_exists_inorder):
-            if float(data['quantity']) == 0:
-              # print('hello word not delete')
-              db.session.delete(order_already_exists_inorder)
-            else:
-              order_already_exists_inorder.quantity = float(data['quantity'])
-            # db.session.commit()
-
-          else:
-            if (float(data['quantity']) == 0):
-              flash("Item does not already exist")
-            else:
-              new_orderitem = OrderItem(order_id=id,
-                                        menuitem_id=menuitem.id,
-                                        user_id=college.id,
-                                        quantity=data['quantity'])
-              db.session.add(new_orderitem)
+      data = request.form
+      college = User.query.filter_by(name=data['user']).first()
+      if float(college.balance) > float(-50.0):
+        try:
+          menuitem = MenuItem.query.filter_by(
+            description=data['menuitem'], restaurant_id=restaurant_id).first()
+          orderitems = OrderItem.query.filter_by(order_id=id)
+          user_exists_inorder = orderitems.filter_by(user_id=college.id)
+          if (user_exists_inorder):
+            order_already_exists_inorder = orderitems.filter_by(
+              user_id=college.id, menuitem_id=menuitem.id).first()
+            if (order_already_exists_inorder):
+              if float(data['quantity']) == 0:
+                # print('hello word not delete')
+                db.session.delete(order_already_exists_inorder)
+              else:
+                order_already_exists_inorder.quantity = float(data['quantity'])
               # db.session.commit()
-          # if (data['menuitem'] == orderitems[])
-      except Exception as e:
-        # Handle any exceptions that might occur during database interaction
-        print(f"An error occurred: {e}")
-        db.session.rollback()  # Rollback the transaction in case of an error
-        flash("An error occurred while adding your college order.")
-      else:
-        db.session.commit()
 
+            else:
+              if (float(data['quantity']) == 0):
+                flash("Item does not already exist")
+              else:
+                new_orderitem = OrderItem(order_id=id,
+                                          menuitem_id=menuitem.id,
+                                          user_id=college.id,
+                                          quantity=data['quantity'])
+                db.session.add(new_orderitem)
+                # db.session.commit()
+            # if (data['menuitem'] == orderitems[])
+        except Exception as e:
+          # Handle any exceptions that might occur during database interaction
+          print(f"An error occurred: {e}")
+          db.session.rollback()  # Rollback the transaction in case of an error
+          flash("An error occurred while adding your college order.")
+        else:
+          db.session.commit()
+      else:
+        flash("Your college's balance is insufficient to place his order")
       return redirect(url_for('order_sheet', id=id))
 
   zipped_data = zip(orderitems_uniqueusers, users_items_cost)
