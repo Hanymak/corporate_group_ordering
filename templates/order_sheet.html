@@ -28,6 +28,25 @@
     .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
       background-color: #FAFA33;
     }
+    table {
+        border-collapse:separate;
+        border:solid black 1px;
+        border-radius:6px;
+    }
+    td, th {
+        border-left:solid black 1px;
+        border-top:solid black 1px;
+    }
+
+    th {
+        background-color: blue;
+        border-top: none;
+    }
+
+    td:first-child, th:first-child {
+         border-left: none;
+    }
+
 /* table {
   text-align: left;
   position: relative;
@@ -167,7 +186,7 @@ th {
     <tr>
       <th scope="col"></th>
       {% for menuitem in menuitems_uniqueorders %}
-      <th scope="col">{{menuitem['description']}} <br> {{menuitem['price']}}</th>
+      <th scope="col">{{menuitem['description']}} <br> {{menuitem['price']}} L.E.</th>
 
       {% endfor %}
       <th scope="col">Total</th>
@@ -201,7 +220,7 @@ th {
         
       </td>
       {% endfor %}
-      <td>{{user_items_cost}}</td>
+      <td>{{user_items_cost}} L.E.</td>
     </tr>
     {% endfor %}
     <th scope="row" style="color: red;">{% if order_status == "Paid"%}
@@ -213,7 +232,7 @@ th {
     {% for menu_item_quantity in menu_items_quantity %}
     <td style="color: red;">{{menu_item_quantity}}</td>
     {% endfor %}
-    <td style="color: red;">{{order_cost}}</td>
+    <td style="color: red;">{{order_cost}} L.E.</td>
   </tbody>
 </table>
 
@@ -235,6 +254,9 @@ th {
           <td>{{menu_item_quantity}}</td>
         </tr>
         {%endfor%}
+          <td style="background-color: #C5C5C5"><b><em>Total</em></b></td>
+          <td style="background-color: #C5C5C5"><b><em>{{total_num_of_items}}</em></b></td>
+
       </tbody>
     </table>
 

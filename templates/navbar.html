@@ -89,6 +89,11 @@
       .navbar-custom {
     background-color: lightgreen;
 }
+      
+      ul > li {
+          text-align: center;
+      }
+
     </style>
 
     
@@ -121,7 +126,9 @@
           <a class="navbar-brand col-lg-3 me-0" href="/home">
             <img src = "/static/tsfoodies_logo.png" style="width:30%;">
           </a>
-          <ul class="navbar-nav col-lg-6 justify-content-lg-center">
+          <div class="container">
+            <div class="row">
+          <ul class="navbar-nav col-lg-10 justify-content-lg-center">
             <li class="nav-item">
               <a class="nav-link active" aria-current="page" href="/home">Home</a>
             </li>
@@ -136,22 +143,58 @@
               <ul class="dropdown-menu">
                 <!-- <li><a class="dropdown-item" href="#">Action</a></li> -->
                 <li><a class="dropdown-item" href="/users_details">Users </a></li>
+                {% if current_user['admin'] == 1 %}
+                <li><a class="dropdown-item" href="/admins_details">Admins </a></li>
+                {% endif %}
                 <li>
                     <a class="dropdown-item" href="/telegram_notifications">telegram </a>
                 </li>
                 
+                <li>
+                    <a class="dropdown-item" href="/wallet_transaction_history">Wallet History </a>
+                </li>
                 
               </ul>
             </li>
-          </ul>
-          <div class="d-lg-flex col-lg-3 justify-content-lg-end">
-            <form method="POST" action="/logout">
 
+            </ul>
+
+
+              </div>
+              </div>
+
+              <div class="d-lg-flex col-lg-20 justify-content-lg-end">
+            <li class="nav-item dropdown d-lg-flex col-lg-20 justify-content-lg-end ">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false"> Hello {{current_user['name'] }}</a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="/logout">logout </a></li>
+
+              </ul>
+            </li>
+            </div>
+              
+
+            
+            
+
+          <!-- <div class="container">
+            <div class="row">
+              <div class=" d-lg-flex col-lg-20 justify-content-lg-end">
+          
+            <p class="text-center  list-group-item list-group-item-info p-1" style="color:black;border-radius: 40px 0px 0px 40px;background-color: lightgreen  ;"> Hello {{current_user['name'] }} </p>
+          
+              </div>
+          <div class="d-lg-flex col-lg-20 justify-content-lg-end">
+            
+            <form method="POST" action="/logout">
+              
               <button class="btn btn-primary" href="{{ url_for('logout') }}" >Logout</button>
               
             </form>
-            
           </div>
+            </div>
+          </div> -->
         </div>
       </div>
     </nav>
+  </body>
