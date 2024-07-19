@@ -103,7 +103,7 @@ if Debug:
   db_connection_string = os.environ['DB_CONNECTION_STRING_TEST_BRANCH']
 else:
   db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
-db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
+db_connection_string = os.environ['DB_CONNECTION_STRING_TEST_BRANCH']
 #mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
@@ -537,11 +537,13 @@ def users_details():
 @login_required
 def admins_details():
   users = load_all_users()
+  admins = [admin for admin in users if admin.admin == 1]
+  # print(admins)
   # transactions_from_db_descending = sorted(
   #   transactions_from_db,
   #   key=lambda item: item['transaction_id'],
   #   reverse=True)
-  return render_template('admins_details.html', users=users)
+  return render_template('admins_details.html', users=admins)
 
 
 @app.route("/create_order", methods=['GET', 'POST'])
@@ -708,33 +710,42 @@ def order_sheet(id):
       if float(current_user.balance) > float(-50.0):
         try:
           data = request.form
-          menuitem = MenuItem.query.filter_by(
-            description=data['menuitem'], restaurant_id=restaurant_id).first()
+          for key, value in data.items():
+            # print(key, value)
+            if key.startswith('menuitem_'):
+              menuitem_index = key.replace('menuitem_', '')
+              quantity_from_user = "{:.2f}".format(
+                float(data.get(f'quantity_{menuitem_index}')))
+              if value:
+                menuitem = MenuItem.query.filter_by(
+                  description=value, restaurant_id=restaurant_id).first()
 
-          orderitems = OrderItem.query.filter_by(order_id=id)
-          user_exists_inorder = orderitems.filter_by(user_id=current_user.id)
-          if (user_exists_inorder):
-            order_already_exists_inorder = orderitems.filter_by(
-              user_id=current_user.id, menuitem_id=menuitem.id).first()
-            if (order_already_exists_inorder):
-              if float(data['quantity']) == 0:
-                # print('hello word not delete')
-                db.session.delete(order_already_exists_inorder)
-              else:
-                order_already_exists_inorder.quantity = float(data['quantity'])
-              # db.session.commit()
+                orderitems = OrderItem.query.filter_by(order_id=id)
+                user_exists_inorder = orderitems.filter_by(
+                  user_id=current_user.id)
+                if (user_exists_inorder):
+                  order_already_exists_inorder = orderitems.filter_by(
+                    user_id=current_user.id, menuitem_id=menuitem.id).first()
+                  if (order_already_exists_inorder):
+                    if float(quantity_from_user) == 0:
+                      # print('hello word not delete')
+                      db.session.delete(order_already_exists_inorder)
+                    else:
+                      order_already_exists_inorder.quantity = float(
+                        quantity_from_user)
+                    # db.session.commit()
 
-            else:
-              if (float(data['quantity']) == 0):
-                flash("Item does not already exist")
-              else:
-                new_orderitem = OrderItem(order_id=id,
-                                          menuitem_id=menuitem.id,
-                                          user_id=current_user.id,
-                                          quantity=data['quantity'])
-                print(new_orderitem)
-                db.session.add(new_orderitem)
-                # db.session.commit()
+                  else:
+                    if (float(quantity_from_user) == 0):
+                      flash("Item does not already exist")
+                    else:
+                      new_orderitem = OrderItem(order_id=id,
+                                                menuitem_id=menuitem.id,
+                                                user_id=current_user.id,
+                                                quantity=quantity_from_user)
+                      # print(new_orderitem)
+                      db.session.add(new_orderitem)
+                      # db.session.commit()
         except Exception as e:
           # Handle any exceptions that might occur during database interaction
           print(f"An error occurred: {e}")
@@ -1257,7 +1268,7 @@ def balance_recharge():
 
     user_to = User.query.filter_by(
       name=request.form['to_user'].upper()).first()
-    new_transaction = Transaction(
+    new_transaction = Wallet_Transaction(
       to_user=user_to.name,
       to_user_balance_before=user_to.balance,
       to_user_balance_after=float(user_to.balance) +
@@ -1497,7 +1508,7 @@ def registration_complete():
 if __name__ == "__main__":
   # telegram_main()
 
-  app.run(host='0.0.0.0', debug=False)
+  app.run(host='0.0.0.0', debug=True)
 
   # while True:
   #   try:
