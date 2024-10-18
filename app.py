@@ -707,6 +707,7 @@ def order_sheet(id):
     action = request.form.get("action")
 
     if action == "addOrder":
+      # if (current_user.active == 1):
       if float(current_user.balance) > float(-50.0):
         try:
           data = request.form
@@ -757,6 +758,9 @@ def order_sheet(id):
       else:
         flash("Your balance is insufficient to place your order")
       return redirect(url_for('order_sheet', id=id))
+      # else:
+      # flash("You are an inactive user")
+      # return redirect(url_for('order_sheet', id=id))
     elif action == "updateItemPrice":
       try:
         data = request.form
@@ -1332,8 +1336,12 @@ def login():
     user = User.query.filter_by(email=request.form['email'].upper()).first()
     if user:
       if bcrypt.check_password_hash(user.password, request.form['password']):
-        login_user(user)
-        return redirect(url_for('home'))
+        if (user.active == 1):
+          login_user(user)
+          return redirect(url_for('home'))
+        else:
+          flash("Your account is not active. Please contact the admin.",
+                'error')
       else:
         flash("Incorrect User Name Or Password")
     else:
