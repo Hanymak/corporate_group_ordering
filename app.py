@@ -342,7 +342,7 @@ with app.app_context():
   bot.remove_webhook()
   #webhook name must have www. in front of it
 
-  bot.set_webhook(url="https://www.tefoodies.fun/api",
+  bot.set_webhook(url="https://www.tefoodies.com/api",
                   allowed_updates=["message", "callback_query"])
 
 
@@ -624,7 +624,7 @@ def create_order():
                       recipients=[user.email])
 
         msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
-          'time_to_order'] + " mints" + "\n\n Place your order from: https://www.tefoodies.fun/order_sheet/" + str(
+          'time_to_order'] + " mints" + "\n\n Place your order from: https://www.tefoodies.com/order_sheet/" + str(
             new_order.id) + "\n\nRegards,\nTE-Foodies"
         send_notification(user, msg)
     return redirect("/order_sheet/{}".format(new_order.id))
