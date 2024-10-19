@@ -1,5 +1,14 @@
 
-
+<script>
+  function disableSubmitButtonpayOrder() {
+    // Disable the submit button to prevent multiple submissions
+    var submitButton = document.getElementById('payOrder');
+    submitButton.disabled = true;
+    var hiddenSubmitValue = document.getElementById('hiddenSubmitValue');
+    // Set the hidden input value to the same value as the submit button
+    hiddenSubmitValue.value = submitButton.value;
+  }
+</script>
 <!-- Modal -->
 <div class="modal fade" id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -15,12 +24,12 @@
       <div class="modal-body">
 
 
-        <form action="{{url_for('order_sheet',id=id)}}"  method="post">
-
+        <form action="{{url_for('order_sheet',id=id)}}"  method="post" onsubmit="disableSubmitButtonpayOrder()">
+          <input type="hidden" name="action" value="payOrder" id="hiddenSubmitValue">
           <label>Wallet :
             <select required  name="user_name" id="selectBox1" >
             <option value="" disabled selected>Select your option</option>
-            {% for user in users %}
+            {% for user in active_users %}
               {% if(user.admin) %}
                 <option class="dropdown-item" value="{{ user['name'] }}">
                 {{ user['name'] }} Vault
@@ -44,7 +53,7 @@
              </label>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" name ="action" value="payOrder" class="btn btn-primary">Pay</button>
+            <button type="submit" name ="action"  value="payOrder" id="payOrder" class="btn btn-primary">Pay</button>
           </div>
         </form>
       </div>

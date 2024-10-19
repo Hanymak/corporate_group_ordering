@@ -1,25 +1,126 @@
 <script>
-  function handleClick(button) {
-      // Disable the button
-      button.disabled = true;
+  var selectBoxCounter1 = 1; // Initialize counter
 
-      // Get the form associated with the button
-      const form = button.form;
+  function addNew1() {
+    // Get the main Div in which all the other divs will be added
+    var mainContainer1 = document.getElementById('mainContainer1');
+    mainContainer1.className="col-xlg-12 mx-auto";
+    // Create a new div for holding text and button input elements
+    var newDiv = document.createElement('div');
+      newDiv.className = 'input-group mb-3';
+    // Create a new text input
+    var newSelectBox = document.createElement('select');
+    newSelectBox.name = 'menuitem_' + selectBoxCounter1; // Set name attribute
+    newSelectBox.required = true;
+    newSelectBox.className = 'selectpicker form-control';
 
-      // Perform client-side validation if needed
-      if (form.checkValidity()) {
-          // If the form is valid, submit it
-          form.submit();
+    // Add "Select your option" option to the dropdown
+    var defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.text = 'Select your option';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    newSelectBox.add(defaultOption);
+    {% for menuitem in menuitems %};
+    var newOption = document.createElement('option');
+    newOption.value = "{{ menuitem["description"] }}";
+    newOption.text = "{{ menuitem["description"] }} {{ menuitem["price"] }}";
+    newSelectBox.add(newOption);
+    {% endfor %};
+    var inputGroup = document.createElement('div');
+    inputGroup.className = 'input-group mb-3';
+    var spanInputGroup = document.createElement('span');
+    spanInputGroup.className = 'input-group-text';
+    spanInputGroup.textContent = '-';
+    var input = document.createElement("input");
+    input.type = "number";
+    input.step = ".01";
+    input.min = "0.0";
+    input.max = "9999.99";
+    input.required = true;
+    input.name = "quantity_" + selectBoxCounter1; // Set name attribute
+    input.className = 'form-control';
+    input.setAttribute('aria-label', 'Amount (to the nearest dollar)');
+    var spanInputGroup2 = document.createElement('span');
+    spanInputGroup2.className = 'input-group-text';
+    spanInputGroup2.textContent = '.00';
 
-          // You can also handle the server response here and provide feedback to the user.
-          setTimeout(function() {
-              // Enable the button after the simulated server response
-              button.disabled = false;
-          }, 20000); // Simulated delay (2 seconds in this example)
-      } else {
-          // If the form is not valid, re-enable the button
-          button.disabled = false;
-      }
+    // Set margins or paddings to create space
+    // newSelectBox.style.marginBottom = '10px';
+    // newSelectBox.style.marginRight = '10px'; // Adjust the spacing as needed
+    // spanInputGroup2.style.marginLeft = '10px'; // Adjust the spacing as needed
+
+    // Create buttons for creating and removing inputs
+    var newAddButton = document.createElement('input');
+    newAddButton.type = "button";
+    newAddButton.value = " + ";
+
+    var newDelButton = document.createElement('input');
+    newDelButton.type = "button";
+    newDelButton.value = " - ";
+
+    // Append new text input to the newDiv
+    newDiv.appendChild(newSelectBox);
+      newDiv.appendChild(spanInputGroup);
+      newDiv.appendChild(input);
+      newDiv.appendChild(spanInputGroup2);
+    // spanInputGroup.appendChild(input);
+    // newDiv.appendChild(inputGroup);
+    // Append new button inputs to the newDiv
+        // newDiv.appendChild(newAddButton);
+        newDiv.appendChild(newDelButton);
+
+    // Append newDiv input to the mainContainer div
+    mainContainer1.appendChild(newDiv);
+    // mainContainer.appendChild(inputGroup);
+
+    // Add a handler to button for deleting the newDiv from the mainContainer
+    newAddButton.onclick = addNew1;
+
+    newDelButton.onclick = function() {
+      mainContainer1.removeChild(newDiv);
+    };
+
+    // Increment the counter for the next dropdown
+    selectBoxCounter1++;
+
+    // Set up the event listener with an anonymous function
+    newSelectBox.addEventListener("change", function (event) {
+      prevent_duplicate_selection(event, newSelectBox);
+    });
+  }
+
+  function getAllSelectValues() {
+    var allSelectBoxes = document.getElementsByTagName('select');
+    var selectedValues = [];
+
+    for (var i = 0; i < allSelectBoxes.length; i++) {
+      var selectBox = allSelectBoxes[i];
+      selectedValues.push(selectBox.value);
+    }
+
+    return selectedValues;
+  }
+
+  function prevent_duplicate_selection(event, selectBox) {
+    var selectedValues = getAllSelectValues();
+    var selectedValue = selectBox.value;
+
+    if (selectedValues.filter(value => value === selectedValue).length > 1) {
+      alert('User is already selected in another dropdown!');
+
+      // Reset the value to an empty string or the default value
+      selectBox.value = '';
+    }
+  }
+  function disableSubmitButtonaddCollegeOrder() {
+    // Disable the submit button to prevent multiple submissions
+    var submitButton = document.getElementById('addCollegeOrder');
+    submitButton.disabled = true;
+    var hiddenSubmitValue = document.getElementById('hiddenSubmitValue');
+
+    // Set the hidden input value to the same value as the submit button
+    hiddenSubmitValue.value = submitButton.value;
   }
 </script>
 
@@ -28,7 +129,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Add Your Order</h1>
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Add Your College Order</h1>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
       </div>
 
@@ -38,56 +139,50 @@
       <div class="modal-body">
 
 
-        <form action="{{url_for('order_sheet',id=id)}}"  method="post">
+        <form action="{{url_for('order_sheet',id=id)}}"   method="post" onsubmit="disableSubmitButtonaddCollegeOrder()" >
+          <input type="hidden" name="action" value="addCollegeOrder" id="hiddenSubmitValue">
+          <select required   class="selectpicker form-control" name="user" id="select" >
+          <option value="" disabled selected>Select your option</option>
+          {% for user in active_users %}
 
-          <label>College Name :
-            <select required  name="user" id="selectBox1" >
-            <option value="" disabled selected>Select your option</option>
-            {% for user in users %}
+          <option class="dropdown-item" value="{{ user['name'] }}">
+          {{ user['name'] }}
 
-            <option class="dropdown-item" value="{{ user['name'] }}">
-            {{ user['name'] }}
-
-            </option>
-            {% endfor %}
-            </select>
-
-          </label>
-          <br>
-          <br>
+          </option>
+          {% endfor %}
+          </select>
+          <div style="margin-top:5%;">
+          <container class="col-xlg-12 mx-auto"   id="mainContainer1">
           
-          <label>Menu Items :
-            <select required  name="menuitem" id="selectBox1" >
-            <option value="" disabled selected>Select your option</option>
+            <div style="margin-top:5%;" class="input-group  mb-3 ">
+            <!-- <select required  name="menuitem" id="selectBox1" > -->
+
+              
+              <select  required class="selectpicker form-control" name="menuitem_0" id="select" onchange="prevent_duplicate_selection(null,this);" >
+              <option value="" disabled selected>Select your option</option>
             {% for menuitem in menuitems %}
 
-            <option class="dropdown-item" value="{{ menuitem['description'] }}">
+            <option  value="{{ menuitem['description'] }}">
             {{ menuitem['description'] }} {{ menuitem['price'] }}
 
             </option>
             {% endfor %}
             </select>
-
-          </label>
-
-          <br>
-          <br>
-          <label> Quantity : 
-
-          <container class="col-xlg-12 mx-auto  container row justify-content-center" style="margin-top : 5%;" >
-            <div class="input-group mb-3">
-              <!-- <span class="input-group-text">$</span> -->
-              <input type="number" step=".01" min=0 max=9999.99 required id="salary" name="quantity" class="  form-control"          aria-label="Amount (to the nearest dollar)">
+              <span class="input-group-text">-</span>
+              <input type="number" step=".01" min=0 max=9999.99 required id="salary" name="quantity_0" class="form-control" aria-label="Amount (to the nearest dollar)">
               <span class="input-group-text">.00</span>
+              <input type="button" value=" + " onClick="addNew1();">
             </div>      
           </container>
-          </label>
 
+          <div style="margin-top:5%;">
+            <p style="color:grey;font-size:12px;">Note: <em>The negative sign does <strong>NOT</strong> remove your order, to remove your order re-select the item and set the quantity to zero.</em></p>
+          </div>
           <!-- name = "transfer" value="Transfer" -->
 
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" name ="action" value="addCollegeOrder" class="btn btn-primary"   >Add/Modify</button>
+            <button type="submit" name ="action" value="addCollegeOrder" id="addCollegeOrder" class="btn btn-primary"  >Add/Modify</button>
           </div>
         </form>
       </div>

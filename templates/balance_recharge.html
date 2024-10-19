@@ -1,4 +1,11 @@
-      <!-- Modal -->
+<script>
+  function disableSubmitButtonbalance_recharge() {
+    // Disable the submit button to prevent multiple submissions
+    var submitButton = document.getElementById('balance_recharge');
+    submitButton.disabled = true;
+  }
+</script>
+<!-- Modal -->
       <div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
@@ -13,13 +20,13 @@
             <div class="modal-body">
 
 
-              <form action="/balance_recharge"  method="post">
+              <form action="/balance_recharge"  method="post" onsubmit="disableSubmitButtonbalance_recharge()">
 
 
                 <label style="margin-top:5%;">Transfer to :
                   <select name="to_user" id="selectBox2" required >
                     <option value="" disabled selected>Select your option</option>
-                    {% for user in users %}
+                    {% for user in active_users %}
 
                     <option value="{{user['name']}}" > {{user['name']}} </option>
 
@@ -49,7 +56,7 @@
 
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="submit"  class="btn btn-primary">Recharge</button>
+                  <button type="submit"  class="btn btn-primary" id="balance_recharge" value="balance_recharge" >Recharge</button>
                 </div>
               </form>
             </div>

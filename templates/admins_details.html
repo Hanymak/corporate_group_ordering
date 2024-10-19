@@ -69,7 +69,7 @@ th {
   <tbody>
     {% for user in users %}
     <tr>
-      <th scope="row">{{user['id']}}</th>
+      <th scope="row">{{ loop.index }}</th>
       <td>    {{user['name']}}     </td>
       <td>    {{user['email']}}</td>
       <td>    {{user['phone']}}</td>

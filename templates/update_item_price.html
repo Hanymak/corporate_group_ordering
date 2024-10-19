@@ -1,26 +1,14 @@
 <script>
-  function handleClick(button) {
-      // Disable the button
-      button.disabled = true;
+  function disableSubmitButtonupdateItemPrice() {
+    // Disable the submit button to prevent multiple submissions
+    var submitButton = document.getElementById('updateItemPrice');
+    submitButton.disabled = true;
+    var hiddenSubmitValue = document.getElementById('hiddenSubmitValue');
 
-      // Get the form associated with the button
-      const form = button.form;
-
-      // Perform client-side validation if needed
-      if (form.checkValidity()) {
-          // If the form is valid, submit it
-          form.submit();
-
-          // You can also handle the server response here and provide feedback to the user.
-          setTimeout(function() {
-              // Enable the button after the simulated server response
-              button.disabled = false;
-          }, 20000); // Simulated delay (2 seconds in this example)
-      } else {
-          // If the form is not valid, re-enable the button
-          button.disabled = false;
-      }
+    // Set the hidden input value to the same value as the submit button
+    hiddenSubmitValue.value = submitButton.value;
   }
+
 </script>
 <!-- Modal -->
 			<div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -37,8 +25,8 @@
 						<div class="modal-body">
         
 
-<form action="{{url_for('order_sheet',id=id)}}"  method="post">
-  
+<form action="{{url_for('order_sheet',id=id)}}"  method="post" onsubmit="disableSubmitButtonupdateItemPrice()">
+   <input type="hidden" name="action" value="updateItemPrice" id="hiddenSubmitValue">
   <label>Menu Items :
   <select required  name="menuitem" id="selectBox2" >
 <option value="" disabled selected>Select your option</option>
@@ -73,7 +61,7 @@
       
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit"   name ="action" value="updateItemPrice" class="btn btn-primary">Update </button>
+        <button type="submit"   name ="action" id="updateItemPrice" value="updateItemPrice" class="btn btn-primary">Update </button>
       </form>
 </div>
     </div>

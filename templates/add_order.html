@@ -1,4 +1,6 @@
 <script>
+
+
   var selectBoxCounter = 1; // Initialize counter
 
   function addNew() {
@@ -35,7 +37,7 @@
     var input = document.createElement("input");
     input.type = "number";
     input.step = ".01";
-    input.min = "-9999.99";
+    input.min = "0.0";
     input.max = "9999.99";
     input.required = true;
     input.name = "quantity_" + selectBoxCounter; // Set name attribute
@@ -113,6 +115,15 @@
       selectBox.value = '';
     }
   }
+  function disableSubmitButtonaddOrder() {
+    // Disable the submit button to prevent multiple submissions
+    var submitButton = document.getElementById('submitAddOrder');
+    submitButton.disabled = true;
+    var hiddenSubmitValue = document.getElementById('hiddenSubmitValue');
+
+    // Set the hidden input value to the same value as the submit button
+    hiddenSubmitValue.value = submitButton.value;
+  }
 </script>
 
 <!-- Modal -->
@@ -130,7 +141,10 @@
       <div class="modal-body">
 
 
-        <form action="{{url_for('order_sheet',id=id)}}"   method="post" >
+        <form action="{{url_for('order_sheet',id=id)}}"   method="post" onsubmit="disableSubmitButtonaddOrder()" >
+          <!-- Hidden field for submit button -->
+          <input type="hidden" name="action" value="addOrder" id="hiddenSubmitValue">
+
           <container class="col-xlg-12 mx-auto"   id="mainContainer">
           
             <div style="margin-top:5%;" class="input-group  mb-3 ">
@@ -159,7 +173,7 @@
 
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" name ="action" value="addOrder" class="btn btn-primary"  >Add/Modify</button>
+            <button type="submit" name ="action" value="addOrder" id="submitAddOrder" class="btn btn-primary"  >Add/Modify</button>
           </div>
         </form>
       </div>

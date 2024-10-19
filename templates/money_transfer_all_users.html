@@ -1,12 +1,5 @@
-<style type="text/css">
-
-/* span {
-  display: inline-block;
-  width: 5px;
-} */
-
-</style>
 <script>
+
   var selectBoxCounter = 1; // Initialize counter
 
   function addNew() {
@@ -29,7 +22,7 @@
     defaultOption.disabled = true;
     defaultOption.selected = true;
     newSelectBox.add(defaultOption);
-    {% for user in users %};
+    {% for user in active_users %};
     var newOption = document.createElement('option');
     newOption.value = "{{ user["name"] }}";
     newOption.text = "{{ user["name"] }}";
@@ -121,31 +114,15 @@
       selectBox.value = '';
     }
   }
-</script>
-<script>
-  function handleClick(button) {
-      // Disable the button
-      button.disabled = true;
 
-      // Get the form associated with the button
-      const form = button.form;
-
-      // Perform client-side validation if needed
-      if (form.checkValidity()) {
-          // If the form is valid, submit it
-          form.submit();
-
-          // You can also handle the server response here and provide feedback to the user.
-          setTimeout(function() {
-              // Enable the button after the simulated server response
-              button.disabled = false;
-          }, 20000); // Simulated delay (2 seconds in this example)
-      } else {
-          // If the form is not valid, re-enable the button
-          button.disabled = false;
-      }
+  function disableSubmitButtonmoney_transfer_from_all_users() {
+    // Disable the submit button to prevent multiple submissions
+    var submitButton = document.getElementById('money_transfer_from_all_users');
+    submitButton.disabled = true;
   }
+
 </script>
+
 <!-- Modal -->
       <div class="modal modal-lg fade" id="exampleModal5" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -159,7 +136,7 @@
 
 
             <div class="modal-body">
-              <form action="/money_transfer_from_all_users"  method="post">
+              <form action="/money_transfer_from_all_users"  method="post" onsubmit="disableSubmitButtonmoney_transfer_from_all_users()">
 
 
                  
@@ -170,7 +147,7 @@
                   <select style="margin-top:2%;" class="selectpicker form-control" name="to_user" id="select"  required >
 
                     <option value="" disabled selected>Select your option</option>
-                    {% for user in users %}
+                    {% for user in active_users %}
                     {% if currentUser['admin'] %}
                     <option value="{{user['name']}}" > {{user['name']}} </option>
                     {% else %}
@@ -207,7 +184,7 @@
 
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="submit"   class="btn btn-primary">Transfer All</button>
+                  <button type="submit" id="money_transfer_from_all_users"   class="btn btn-primary">Transfer All</button>
                 </div>
               </form>
             </div>

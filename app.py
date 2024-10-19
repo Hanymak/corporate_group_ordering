@@ -182,7 +182,7 @@ class User(db.Model, UserMixin):
   balance = db.Column(db.Numeric(10, 2), nullable=False, default=0)
   volt_balance = db.Column(db.Numeric(10, 2), default=0)
   admin = db.Column(db.Boolean, default=False)
-  active = db.Column(db.Boolean, default=True)
+  active = db.Column(db.Boolean, default=False)
   random_pattern = db.Column(db.String(20), nullable=True, unique=True)
   chat_id = db.Column(db.String(255), nullable=True, unique=True)
 
@@ -282,6 +282,10 @@ def load_orders_from_db():
 
 def load_all_users():
   return User.query.all()
+
+
+def load_all_active_users():
+  return User.query.filter_by(active=True).all()
 
 
 def load_all_restaurants():
@@ -458,7 +462,8 @@ def home():
   # open_orders = Orders.query.filter_by(status="Open")
   restaurant_from_db = load_all_restaurants()
   users_from_db = load_all_users()
-  admin_users = [user for user in users_from_db if user.admin]
+  active_users = load_all_active_users()
+  admin_users = [user for user in active_users if user.admin]
   sheet_balance = sum(sub.balance for sub in users_from_db)
   admin_wallet_balance = current_user.volt_balance
   wallet_balance = sum(sub.volt_balance for sub in users_from_db)
@@ -473,6 +478,7 @@ def home():
                          orders=open_orders,
                          sheet_balance=sheet_balance,
                          users=users_from_db,
+                         active_users=active_users,
                          currentUser=current_user,
                          restaurants=restaurant_from_db,
                          zipped_data=zipped_data,
@@ -551,11 +557,12 @@ def admins_details():
 def create_order():
   order_restaurant_name = []
   orders_from_db = load_orders_from_db()
+  active_users = load_all_active_users()
   open_orders = [order for order in orders_from_db if order.status == "Open"]
   # open_orders = Orders.query.filter_by(status="Open")
   restaurant_from_db = load_all_restaurants()
   users_from_db = load_all_users()
-  admin_users = [user for user in users_from_db if user.admin]
+  admin_users = [user for user in active_users if user.admin]
   sheet_balance = sum(sub.balance for sub in users_from_db)
   admin_wallet_balance = current_user.volt_balance
   wallet_balance = sum(sub.volt_balance for sub in users_from_db)
@@ -600,6 +607,7 @@ def create_order():
       orders=open_orders,
       sheet_balance=sheet_balance,
       users=users_from_db,
+      active_users=active_users,
       currentUser=current_user,
       restaurants=restaurant_from_db,
       zipped_data=zipped_data,
@@ -609,7 +617,7 @@ def create_order():
 
   else:
     db.session.commit()
-    for user in users:
+    for user in active_users:
       if user.id != current_user.id:
         msg = Message("TE-Foodies Orders",
                       sender='noreply@tsfoodies',
@@ -642,10 +650,10 @@ def create_restaurant():
 @app.route("/order_sheet/<id>", methods=['GET', 'POST'])
 @login_required
 def order_sheet(id):
-
   # orderitems = load_all_orderitems()
   cid = id
   users = load_all_users()
+  active_users = load_all_active_users()
   orderitems = OrderItem.query.filter_by(order_id=id).all()
   order = Orders.query.filter_by(id=id).first()
   restaurant_id = order.restaurant_id
@@ -705,7 +713,7 @@ def order_sheet(id):
   if request.method == "POST":
 
     action = request.form.get("action")
-
+    print(request.form)
     if action == "addOrder":
       # if (current_user.active == 1):
       if float(current_user.balance) > float(-50.0):
@@ -929,50 +937,68 @@ def order_sheet(id):
       return redirect(url_for('order_sheet', id=id))
     elif action == "addCollegeOrder":
       data = request.form
-      college = User.query.filter_by(name=data['user']).first()
-      if float(college.balance) > float(-50.0):
-        try:
-          menuitem = MenuItem.query.filter_by(
-            description=data['menuitem'], restaurant_id=restaurant_id).first()
-          orderitems = OrderItem.query.filter_by(order_id=id)
-          user_exists_inorder = orderitems.filter_by(user_id=college.id)
-          if (user_exists_inorder):
-            order_already_exists_inorder = orderitems.filter_by(
-              user_id=college.id, menuitem_id=menuitem.id).first()
-            if (order_already_exists_inorder):
-              if float(data['quantity']) == 0:
-                # print('hello word not delete')
-                db.session.delete(order_already_exists_inorder)
-              else:
-                order_already_exists_inorder.quantity = float(data['quantity'])
-              # db.session.commit()
+      print(data)
+      if 'user' in data:
+        college = User.query.filter_by(name=data['user']).first()
+        if float(college.balance) > float(-50.0):
+          try:
+            for key, value in data.items():
+              # print(key, value)
+              if key.startswith('menuitem_'):
+                menuitem_index = key.replace('menuitem_', '')
+                quantity_from_user = "{:.2f}".format(
+                  float(data.get(f'quantity_{menuitem_index}')))
+                if value:
+                  menuitem = MenuItem.query.filter_by(
+                    description=value, restaurant_id=restaurant_id).first()
 
-            else:
-              if (float(data['quantity']) == 0):
-                flash("Item does not already exist")
-              else:
-                new_orderitem = OrderItem(order_id=id,
-                                          menuitem_id=menuitem.id,
-                                          user_id=college.id,
-                                          quantity=data['quantity'])
-                db.session.add(new_orderitem)
-                # db.session.commit()
-            # if (data['menuitem'] == orderitems[])
-        except Exception as e:
-          # Handle any exceptions that might occur during database interaction
-          print(f"An error occurred: {e}")
-          db.session.rollback()  # Rollback the transaction in case of an error
-          flash("An error occurred while adding your college order.")
+                  orderitems = OrderItem.query.filter_by(order_id=id)
+                  user_exists_inorder = orderitems.filter_by(
+                    user_id=college.id)
+                  if (user_exists_inorder):
+                    order_already_exists_inorder = orderitems.filter_by(
+                      user_id=college.id, menuitem_id=menuitem.id).first()
+                    if (order_already_exists_inorder):
+                      if float(quantity_from_user) == 0:
+                        # print('hello word not delete')
+                        db.session.delete(order_already_exists_inorder)
+                      else:
+                        order_already_exists_inorder.quantity = float(
+                          quantity_from_user)
+                      # db.session.commit()
+
+                    else:
+                      if (float(quantity_from_user) == 0):
+                        flash("Item does not already exist")
+                      else:
+                        new_orderitem = OrderItem(order_id=id,
+                                                  menuitem_id=menuitem.id,
+                                                  user_id=college.id,
+                                                  quantity=quantity_from_user)
+                        # print(new_orderitem)
+                        db.session.add(new_orderitem)
+                        # db.session.commit()
+
+          except Exception as e:
+            # Handle any exceptions that might occur during database interaction
+            print(f"An error occurred: {e}")
+            db.session.rollback(
+            )  # Rollback the transaction in case of an error
+            flash("An error occurred while adding your college order.")
+          else:
+            db.session.commit()
         else:
-          db.session.commit()
+          flash("Your college's balance is insufficient to place his order")
+
       else:
-        flash("Your college's balance is insufficient to place his order")
+        flash("This user does not exist in the database.")
       return redirect(url_for('order_sheet', id=id))
 
   zipped_data = zip(orderitems_uniqueusers, users_items_cost)
   zipped_data1 = zip(menuitems_uniqueorders, menu_items_quantity)
 
   users = load_all_users()
+  active_users = load_all_active_users()
   return render_template('order_sheet.html',
                          menuitems_uniqueorders=menuitems_uniqueorders,
                          orderitems_uniqueusers=orderitems_uniqueusers,
@@ -985,6 +1011,7 @@ def order_sheet(id):
                          total_num_of_items=total_num_of_items,
                          order_cost=order_cost,
                          users=users,
+                         active_users=active_users,
                          order_status=order_status,
                          order_owner=order_owner,
                          order_restaurant=order_restaurant,
@@ -1087,14 +1114,15 @@ def money_transfer_from_all_users():
     site_fees = "{:.2f}".format(float(data['site_fees']))
     # Process the form data when from_user is not null
     #Get all users
-    all_users = User.query.all()
+
+    active_users = load_all_active_users()
     #count number of users
-    number_of_users = len(all_users)
+    number_of_active_users = len(active_users)
     #divide by the number of users
     transfer_amount = "{:.2f}".format(
-      float(data['site_fees']) / number_of_users)
+      float(data['site_fees']) / number_of_active_users)
     #remove the user paid from the list
-    users_from = [user for user in all_users if user.name != user_to.name]
+    users_from = [user for user in active_users if user.name != user_to.name]
     print(users_from)
     for user_from in users_from:
       new_transaction = Transaction(
