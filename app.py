@@ -1479,7 +1479,7 @@ def verify_email(token):
                     password=bytes(token_user['password'], 'utf-8'),
                     balance=0,
                     admin=False,
-                    active=True,
+                    active=False,
                     random_pattern=random_pattern)
     print("\n\n\n\nToken Valid\n\n\n\n\n")
     db.session.add(new_user)
