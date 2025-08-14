@@ -1,4 +1,5 @@
 import os
+import requests
 from flask import Flask, flash, render_template, jsonify, request, redirect, url_for, session
 # from database import engine, add_transfered_balance_to_user_db, balance_recharge_to_user_db
 from sqlalchemy import create_engine, text, distinct, MetaData
@@ -103,7 +104,7 @@ if Debug:
   db_connection_string = os.environ['DB_CONNECTION_STRING_TEST_BRANCH']
 else:
   db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
-db_connection_string = os.environ['DB_CONNECTION_STRING_MAIN_BRANCH']
+db_connection_string = os.environ['DB_CONNECTION_STRING_TEST_BRANCH']
 #mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
@@ -129,11 +130,11 @@ mail = Mail(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_connection_string
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-  'connect_args': {
-    'ssl': {
-      'ssl_ca': '/etc/ssl/cert.pem'
+    'connect_args': {
+        'ssl': {
+            'ssl_ca': '/etc/ssl/cert.pem'
+        }
     }
-  }
 }
 app.config['SECRET_KEY'] = 'helloall'
 # initialize the app with the extension
@@ -383,7 +384,7 @@ def check_for_pattern(message):
   try:
     with app.app_context():
       user_match_random_pattern = User.query.filter_by(
-        random_pattern=message.text).first()
+          random_pattern=message.text).first()
     print(f"users: {user_match_random_pattern}")
 
   except Exception as e:
@@ -411,7 +412,7 @@ def send_notification(user, msg):
 
 
 @bot.message_handler(
-  func=lambda message: check_for_pattern(message) is not None)
+    func=lambda message: check_for_pattern(message) is not None)
 def handle_specific_text(message):
   user = check_for_pattern(message)
 
@@ -441,7 +442,7 @@ def orders_history():
   orders_restaurant_id = [order.restaurant_id for order in orders_from_db]
   for order_restaurant_id in orders_restaurant_id:
     order_restaurant_name.append(
-      Restaurant.query.filter_by(id=order_restaurant_id).first())
+        Restaurant.query.filter_by(id=order_restaurant_id).first())
   # print(order_restaurant_name)
   # print(orders_from_db)
   zipped_data = zip(orders_from_db, order_restaurant_name)
@@ -470,7 +471,7 @@ def home():
   orders_restaurant_id = [order.restaurant_id for order in open_orders]
   for order_restaurant_id in orders_restaurant_id:
     order_restaurant_name.append(
-      Restaurant.query.filter_by(id=order_restaurant_id).first())
+        Restaurant.query.filter_by(id=order_restaurant_id).first())
   zipped_data = zip(open_orders, order_restaurant_name)
   # zipped_list = list(zipped_data)
   # length_zipped_data = len(zipped_list)
@@ -569,7 +570,7 @@ def create_order():
   orders_restaurant_id = [order.restaurant_id for order in open_orders]
   for order_restaurant_id in orders_restaurant_id:
     order_restaurant_name.append(
-      Restaurant.query.filter_by(id=order_restaurant_id).first())
+        Restaurant.query.filter_by(id=order_restaurant_id).first())
   zipped_data = zip(open_orders, order_restaurant_name)
   data = request.form
   print(data)
@@ -603,17 +604,17 @@ def create_order():
     flash("An error occurred while creating the order")
 
     return render_template(
-      'home.html',
-      orders=open_orders,
-      sheet_balance=sheet_balance,
-      users=users_from_db,
-      active_users=active_users,
-      currentUser=current_user,
-      restaurants=restaurant_from_db,
-      zipped_data=zipped_data,
-      admin_wallet_balance=admin_wallet_balance,
-      wallet_balance=wallet_balance,
-      admin_users=admin_users)  # Redirect to an error page or another route
+        'home.html',
+        orders=open_orders,
+        sheet_balance=sheet_balance,
+        users=users_from_db,
+        active_users=active_users,
+        currentUser=current_user,
+        restaurants=restaurant_from_db,
+        zipped_data=zipped_data,
+        admin_wallet_balance=admin_wallet_balance,
+        wallet_balance=wallet_balance,
+        admin_users=admin_users)  # Redirect to an error page or another route
 
   else:
     db.session.commit()
@@ -624,8 +625,8 @@ def create_order():
                       recipients=[user.email])
 
         msg.body = "Dears,\n\nKindly be noted that " + current_user.name + " Started a new order from " + restaurant.name + " and will order within " + data[
-          'time_to_order'] + " mints" + "\n\n Place your order from: https://www.tefoodies.com/order_sheet/" + str(
-            new_order.id) + "\n\nRegards,\nTE-Foodies"
+            'time_to_order'] + " mints" + "\n\n Place your order from: https://www.tefoodies.com/order_sheet/" + str(
+                new_order.id) + "\n\nRegards,\nTE-Foodies"
         send_notification(user, msg)
     return redirect("/order_sheet/{}".format(new_order.id))
 
@@ -635,7 +636,7 @@ def create_order():
 def create_restaurant():
   data = request.form
   restaurant_name = Restaurant.query.filter_by(
-    name=data['restaurant_name'].upper()).first()
+      name=data['restaurant_name'].upper()).first()
   if not restaurant_name:
     new_restaurant = Restaurant(name=data['restaurant_name'],
                                 address=data['restaurant_address'],
@@ -658,7 +659,7 @@ def order_sheet(id):
   order = Orders.query.filter_by(id=id).first()
   restaurant_id = order.restaurant_id
   menuitems_restaurant = MenuItem.query.filter_by(
-    restaurant_id=restaurant_id).all()
+      restaurant_id=restaurant_id).all()
   order_restaurant = Restaurant.query.filter_by(id=restaurant_id).first()
   order_owner = order.owner
   order_status = order.status
@@ -679,11 +680,11 @@ def order_sheet(id):
     user_items = OrderItem.query.filter_by(user_id=user.id, order_id=id)
     for user_item in user_items:
       user_item_cost.append(
-        MenuItem.query.filter_by(id=user_item.menuitem_id).first())
+          MenuItem.query.filter_by(id=user_item.menuitem_id).first())
 
     users_items_cost.append(
-      sum(sub.price * float(user_item.quantity)
-          for sub, user_item in zip(user_item_cost, user_items)))
+        sum(sub.price * float(user_item.quantity)
+            for sub, user_item in zip(user_item_cost, user_items)))
     user_item_cost = []
 
   if (order_status == 'Paid'):
@@ -692,14 +693,14 @@ def order_sheet(id):
     order_cost = sum(users_items_cost)
   for menuitem_inorder in orderitems:
     menuitems = MenuItem.query.filter_by(
-      id=menuitem_inorder.menuitem_id).first()
+        id=menuitem_inorder.menuitem_id).first()
     if menuitems not in menuitems_inorder:
       menuitems_inorder.append(menuitems)
   for menu_item_quantity in menuitems_inorder:
     item_quantity = OrderItem.query.filter_by(
-      menuitem_id=menu_item_quantity.id, order_id=id).all()
+        menuitem_id=menu_item_quantity.id, order_id=id).all()
     menu_items_quantity.append(
-      sum(float(sub.quantity) for sub in item_quantity))
+        sum(float(sub.quantity) for sub in item_quantity))
   total_num_of_items = sum(menu_items_quantity)
   # print(menu_items_quantity)
 
@@ -724,24 +725,25 @@ def order_sheet(id):
             if key.startswith('menuitem_'):
               menuitem_index = key.replace('menuitem_', '')
               quantity_from_user = "{:.2f}".format(
-                float(data.get(f'quantity_{menuitem_index}')))
+                  float(data.get(f'quantity_{menuitem_index}')))
               if value:
                 menuitem = MenuItem.query.filter_by(
-                  description=value, restaurant_id=restaurant_id).first()
+                    description=value, restaurant_id=restaurant_id).first()
 
                 orderitems = OrderItem.query.filter_by(order_id=id)
                 user_exists_inorder = orderitems.filter_by(
-                  user_id=current_user.id)
+                    user_id=current_user.id)
                 if (user_exists_inorder):
                   order_already_exists_inorder = orderitems.filter_by(
-                    user_id=current_user.id, menuitem_id=menuitem.id).first()
+                      user_id=current_user.id,
+                      menuitem_id=menuitem.id).first()
                   if (order_already_exists_inorder):
                     if float(quantity_from_user) == 0:
                       # print('hello word not delete')
                       db.session.delete(order_already_exists_inorder)
                     else:
                       order_already_exists_inorder.quantity = float(
-                        quantity_from_user)
+                          quantity_from_user)
                     # db.session.commit()
 
                   else:
@@ -774,8 +776,8 @@ def order_sheet(id):
         data = request.form
         order = Orders.query.filter_by(id=id).first()
         menuitem = MenuItem.query.filter_by(
-          description=data['menuitem'],
-          restaurant_id=order.restaurant_id).first()
+            description=data['menuitem'],
+            restaurant_id=order.restaurant_id).first()
         menuitem.price = float(data['item_new_price'])
         # db.session.commit()
       except Exception as e:
@@ -814,24 +816,24 @@ def order_sheet(id):
         order.total_charge = order_cost + float(data['delivery_fees'])
 
         delivery_per_user = "{:.2f}".format(
-          float(data['delivery_fees']) / len(users_inorder))
+            float(data['delivery_fees']) / len(users_inorder))
 
         transactions = []
         for user, cost in zip(users_inorder, users_items_cost):
           user_balance_before = float(user.balance)
           user.balance = float(
-            user.balance) - float(cost) - float(delivery_per_user)
+              user.balance) - float(cost) - float(delivery_per_user)
 
           # Create Transaction object
           new_transaction = Transaction(
-            from_user=user.name,
-            from_user_balance_before=user_balance_before,
-            from_user_balance_after=float(user.balance),
-            amount=float(cost) + float(delivery_per_user),
-            reason="Order from " + order_restaurant.name,
-            performed_by=current_user.name,
-            date=datetime.now(
-              timezone('Africa/Cairo')).strftime("%d/%m/%Y %I:%M:%S"))
+              from_user=user.name,
+              from_user_balance_before=user_balance_before,
+              from_user_balance_after=float(user.balance),
+              amount=float(cost) + float(delivery_per_user),
+              reason="Order from " + order_restaurant.name,
+              performed_by=current_user.name,
+              date=datetime.now(
+                  timezone('Africa/Cairo')).strftime("%d/%m/%Y %I:%M:%S"))
           transactions.append(new_transaction)
 
           # Notify users
@@ -848,24 +850,25 @@ def order_sheet(id):
         user_vault_paid = User.query.filter_by(name=data['user_name']).first()
 
         new_wallet_transaction = Wallet_Transaction(
-          from_user=data['user_name'],
-          from_user_balance_before=user_vault_paid.volt_balance,
-          from_user_balance_after=float(user_vault_paid.volt_balance) -
-          float(order_cost) - (float(delivery_per_user) * len(users_inorder)),
-          amount=float(order_cost) +
-          (float(delivery_per_user) * len(users_inorder)),
-          reason="Order from " + order_restaurant.name,
-          performed_by=current_user.name,
-          date=datetime.now(
-            timezone('Africa/Cairo')).strftime("%d/%m/%Y %I:%M:%S"))
+            from_user=data['user_name'],
+            from_user_balance_before=user_vault_paid.volt_balance,
+            from_user_balance_after=float(user_vault_paid.volt_balance) -
+            float(order_cost) -
+            (float(delivery_per_user) * len(users_inorder)),
+            amount=float(order_cost) +
+            (float(delivery_per_user) * len(users_inorder)),
+            reason="Order from " + order_restaurant.name,
+            performed_by=current_user.name,
+            date=datetime.now(
+                timezone('Africa/Cairo')).strftime("%d/%m/%Y %I:%M:%S"))
         transactions.append(new_wallet_transaction)
         # Add all transactions to the session and commit
         db.session.add_all(transactions)
 
         # Update user vault balance
         user_vault_paid.volt_balance = float(
-          user_vault_paid.volt_balance) - float(order_cost) - (
-            float(delivery_per_user) * len(users_inorder))
+            user_vault_paid.volt_balance) - float(order_cost) - (
+                float(delivery_per_user) * len(users_inorder))
 
       except Exception as e:
         print(f"An error occurred: {e}")
@@ -947,24 +950,24 @@ def order_sheet(id):
               if key.startswith('menuitem_'):
                 menuitem_index = key.replace('menuitem_', '')
                 quantity_from_user = "{:.2f}".format(
-                  float(data.get(f'quantity_{menuitem_index}')))
+                    float(data.get(f'quantity_{menuitem_index}')))
                 if value:
                   menuitem = MenuItem.query.filter_by(
-                    description=value, restaurant_id=restaurant_id).first()
+                      description=value, restaurant_id=restaurant_id).first()
 
                   orderitems = OrderItem.query.filter_by(order_id=id)
                   user_exists_inorder = orderitems.filter_by(
-                    user_id=college.id)
+                      user_id=college.id)
                   if (user_exists_inorder):
                     order_already_exists_inorder = orderitems.filter_by(
-                      user_id=college.id, menuitem_id=menuitem.id).first()
+                        user_id=college.id, menuitem_id=menuitem.id).first()
                     if (order_already_exists_inorder):
                       if float(quantity_from_user) == 0:
                         # print('hello word not delete')
                         db.session.delete(order_already_exists_inorder)
                       else:
                         order_already_exists_inorder.quantity = float(
-                          quantity_from_user)
+                            quantity_from_user)
                       # db.session.commit()
 
                     else:
@@ -1037,24 +1040,24 @@ def transfer_wallet():
     user_to = User.query.filter_by(name=data['to_user']).first()
 
     new_transaction = Wallet_Transaction(
-      from_user=user_from.name,
-      from_user_balance_before=user_from.volt_balance,
-      from_user_balance_after=float(user_from.volt_balance) -
-      float(data['transfer_amount']),
-      to_user=user_to.name,
-      to_user_balance_before=user_to.volt_balance,
-      to_user_balance_after=float(user_to.volt_balance) +
-      float(data['transfer_amount']),
-      amount=float(data['transfer_amount']),
-      reason=data['transfer_reason'],
-      performed_by=current_user.name,
-      date=datetime_string)
+        from_user=user_from.name,
+        from_user_balance_before=user_from.volt_balance,
+        from_user_balance_after=float(user_from.volt_balance) -
+        float(data['transfer_amount']),
+        to_user=user_to.name,
+        to_user_balance_before=user_to.volt_balance,
+        to_user_balance_after=float(user_to.volt_balance) +
+        float(data['transfer_amount']),
+        amount=float(data['transfer_amount']),
+        reason=data['transfer_reason'],
+        performed_by=current_user.name,
+        date=datetime_string)
 
     user_from.volt_balance = float(user_from.volt_balance) - float(
-      data['transfer_amount'])
+        data['transfer_amount'])
 
     user_to.volt_balance = float(user_to.volt_balance) + float(
-      data['transfer_amount'])
+        data['transfer_amount'])
     # user_list = [user_from, user_to]
 
     db.session.add(new_transaction)
@@ -1064,11 +1067,12 @@ def transfer_wallet():
                   sender='noreply@tsfoodies',
                   recipients=[user_from.email])
     msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-      'transfer_amount'] + "\n\nWallet Balance Before/After : " + "{:.2f}".format(
-        float(float(user_from.volt_balance) + float(data['transfer_amount']))
-      ) + " / " + "{:.2f}".format(
-        float(user_from.volt_balance)
-      ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+        'transfer_amount'] + "\n\nWallet Balance Before/After : " + "{:.2f}".format(
+            float(
+                float(user_from.volt_balance) + float(data['transfer_amount']))
+        ) + " / " + "{:.2f}".format(
+            float(user_from.volt_balance)
+        ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
     if (user_from.chat_id == None):
       mail.send(msg)
     else:
@@ -1078,11 +1082,12 @@ def transfer_wallet():
                   sender='noreply@tsfoodies',
                   recipients=[user_to.email])
     msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-      'transfer_amount'] + "\n\nWallet Balance Before/After : " + "{:.2f}".format(
-        float(float(user_to.volt_balance) - float(data['transfer_amount']))
-      ) + " / " + "{:.2f}".format(
-        float(user_to.volt_balance)
-      ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
+        'transfer_amount'] + "\n\nWallet Balance Before/After : " + "{:.2f}".format(
+            float(
+                float(user_to.volt_balance) - float(data['transfer_amount']))
+        ) + " / " + "{:.2f}".format(
+            float(user_to.volt_balance)
+        ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
     if (user_to.chat_id == None):
       mail.send(msg)
     else:
@@ -1120,23 +1125,24 @@ def money_transfer_from_all_users():
     number_of_active_users = len(active_users)
     #divide by the number of users
     transfer_amount = "{:.2f}".format(
-      float(data['site_fees']) / number_of_active_users)
+        float(data['site_fees']) / number_of_active_users)
     #remove the user paid from the list
     users_from = [user for user in active_users if user.name != user_to.name]
     print(users_from)
     for user_from in users_from:
       new_transaction = Transaction(
-        from_user=user_from.name,
-        from_user_balance_before=user_from.balance,
-        from_user_balance_after=float(user_from.balance) -
-        float(transfer_amount),
-        to_user=user_to.name,
-        to_user_balance_before=user_to.balance,
-        to_user_balance_after=float(user_to.balance) + float(transfer_amount),
-        amount=float(transfer_amount),
-        reason=data['transfer_reason'],
-        performed_by=current_user.name,
-        date=datetime_string)
+          from_user=user_from.name,
+          from_user_balance_before=user_from.balance,
+          from_user_balance_after=float(user_from.balance) -
+          float(transfer_amount),
+          to_user=user_to.name,
+          to_user_balance_before=user_to.balance,
+          to_user_balance_after=float(user_to.balance) +
+          float(transfer_amount),
+          amount=float(transfer_amount),
+          reason=data['transfer_reason'],
+          performed_by=current_user.name,
+          date=datetime_string)
       user_from.balance = float(user_from.balance) - float(transfer_amount)
 
       user_to.balance = float(user_to.balance) + float(transfer_amount)
@@ -1149,9 +1155,9 @@ def money_transfer_from_all_users():
                     sender='noreply@tsfoodies',
                     recipients=[user_from.email])
       msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + transfer_amount + "\n\nBalance Before/After : " + "{:.2f}".format(
-        float(float(user_from.balance) + float(transfer_amount))
+          float(float(user_from.balance) + float(transfer_amount))
       ) + " / " + "{:.2f}".format(
-        float(user_from.balance)
+          float(user_from.balance)
       ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
       if (user_from.chat_id == None):
         mail.send(msg)
@@ -1168,12 +1174,12 @@ def money_transfer_from_all_users():
                   sender='noreply@tsfoodies',
                   recipients=[user_to.email])
     msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account From All Users \n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + "{:.2f}".format(
-      float(site_fees) - float(transfer_amount)
+        float(site_fees) - float(transfer_amount)
     ) + "\n\nBalance Before/After : " + "{:.2f}".format(
-      float(
-        float(user_to.balance) - float(site_fees) + float(transfer_amount))
+        float(
+            float(user_to.balance) - float(site_fees) + float(transfer_amount))
     ) + " / " + "{:.2f}".format(
-      float(user_to.balance)
+        float(user_to.balance)
     ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
     if (user_to.chat_id == None):
       mail.send(msg)
@@ -1211,30 +1217,30 @@ def transfer_money():
       if key.startswith('from_user_'):
         from_user_count = key.replace('from_user_', '')
         transfer_amount = "{:.2f}".format(
-          float(data.get(f'transfer_amount_{from_user_count}')))
+            float(data.get(f'transfer_amount_{from_user_count}')))
         # print(from_user_count, transfer_amount)
         # Check if the value is not null or empty
         if value:
           # Process the form data when from_user is not null
           user_from = User.query.filter_by(name=value).first()
           new_transaction = Transaction(
-            from_user=user_from.name,
-            from_user_balance_before=user_from.balance,
-            from_user_balance_after=float(user_from.balance) -
-            float(transfer_amount),
-            to_user=user_to.name,
-            to_user_balance_before=user_to.balance,
-            to_user_balance_after=float(user_to.balance) +
-            float(transfer_amount),
-            amount=float(transfer_amount),
-            reason=data['transfer_reason'],
-            performed_by=current_user.name,
-            date=datetime_string)
+              from_user=user_from.name,
+              from_user_balance_before=user_from.balance,
+              from_user_balance_after=float(user_from.balance) -
+              float(transfer_amount),
+              to_user=user_to.name,
+              to_user_balance_before=user_to.balance,
+              to_user_balance_after=float(user_to.balance) +
+              float(transfer_amount),
+              amount=float(transfer_amount),
+              reason=data['transfer_reason'],
+              performed_by=current_user.name,
+              date=datetime_string)
           user_from.balance = "{:.2f}".format(
-            float(user_from.balance) - float(transfer_amount))
+              float(user_from.balance) - float(transfer_amount))
 
           user_to.balance = "{:.2f}".format(
-            float(user_to.balance) + float(transfer_amount))
+              float(user_to.balance) + float(transfer_amount))
           # user_list = [user_from, user_to]
           print(new_transaction)
           print(user_from.balance)
@@ -1244,9 +1250,9 @@ def transfer_money():
                         sender='noreply@tsfoodies',
                         recipients=[user_from.email])
           msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + transfer_amount + "\n\nBalance Before/After : " + "{:.2f}".format(
-            float(float(user_from.balance) + float(transfer_amount))
+              float(float(user_from.balance) + float(transfer_amount))
           ) + " / " + "{:.2f}".format(
-            float(user_from.balance)
+              float(user_from.balance)
           ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
           if (user_from.chat_id == None):
             mail.send(msg)
@@ -1257,9 +1263,9 @@ def transfer_money():
                         sender='noreply@tsfoodies',
                         recipients=[user_to.email])
           msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nFrom User : " + user_from.name + "\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + transfer_amount + "\n\nBalance Before/After : " + "{:.2f}".format(
-            float(float(user_to.balance) - float(transfer_amount))
+              float(float(user_to.balance) - float(transfer_amount))
           ) + " / " + "{:.2f}".format(
-            float(user_to.balance)
+              float(user_to.balance)
           ) + "\n\nPerfomed By : " + current_user.name + "\n\nRegards,\nTE-Foodies"
           if (user_to.chat_id == None):
             mail.send(msg)
@@ -1299,21 +1305,21 @@ def balance_recharge():
     data = request.form
 
     user_to = User.query.filter_by(
-      name=request.form['to_user'].upper()).first()
+        name=request.form['to_user'].upper()).first()
     new_transaction = Wallet_Transaction(
-      to_user=user_to.name,
-      to_user_balance_before=user_to.balance,
-      to_user_balance_after=float(user_to.balance) +
-      float(request.form['transfer_amount']),
-      amount=float(request.form['transfer_amount']),
-      reason=request.form['transfer_reason'],
-      performed_by=current_user.name,
-      date=datetime_string)
+        to_user=user_to.name,
+        to_user_balance_before=user_to.balance,
+        to_user_balance_after=float(user_to.balance) +
+        float(request.form['transfer_amount']),
+        amount=float(request.form['transfer_amount']),
+        reason=request.form['transfer_reason'],
+        performed_by=current_user.name,
+        date=datetime_string)
 
     user_to.balance = float(user_to.balance) + float(
-      request.form['transfer_amount'])
+        request.form['transfer_amount'])
     current_user.volt_balance = float(current_user.volt_balance) + float(
-      request.form['transfer_amount'])
+        request.form['transfer_amount'])
     db.session.add(new_transaction)
 
     if (current_user.email != user_to.email):
@@ -1326,12 +1332,12 @@ def balance_recharge():
                     recipients=[user_to.email])
 
     msg.body = "Dears,\n\nKindly be noted that the following transaction was performed on your account:\n\nTo User : " + user_to.name + "\n\nTransaction Amount : " + data[
-      'transfer_amount'] + "\n\nBalance Before/After : " + "{:.2f}".format(
-        float(float(user_to.balance) - float(data['transfer_amount']))
-      ) + " / " + "{:.2f}".format(
-        user_to.balance
-      ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + data[
-        'transfer_reason'] + "\n\nRegards,\nTE-Foodies"
+        'transfer_amount'] + "\n\nBalance Before/After : " + "{:.2f}".format(
+            float(float(user_to.balance) - float(data['transfer_amount']))
+        ) + " / " + "{:.2f}".format(
+            user_to.balance
+        ) + "\n\nPerfomed By : " + current_user.name + "\n\nTransfer Reason : " + data[
+            'transfer_reason'] + "\n\nRegards,\nTE-Foodies"
     # if any user does not have chat id send a mail and send telegram notification
     if (user_to.chat_id == None or current_user.chat_id == None):
       mail.send(msg)
@@ -1387,19 +1393,30 @@ def logout():
   return redirect(url_for('login'))
 
 
+RECAPTCHA_SECRET = os.environ['RECAPTCHA_SECRET']
+
+
 @app.route("/registration", methods=['GET', 'POST'])
 def registration():
   # form = RegisterForm()
   if request.method == "POST":
+    recaptcha_response = request.form.get('g-recaptcha-response')
+    verify_url = "https://www.google.com/recaptcha/api/siteverify"
+    payload = {'secret': RECAPTCHA_SECRET, 'response': recaptcha_response}
+    r = requests.post(verify_url, data=payload)
+    result = r.json()
 
+    if not result.get("success"):
+      flash("Please verify that you are not a robot")
+      return render_template('registration.html')
     useremail = User.query.filter_by(
-      email=request.form['email'].upper()).first()
+        email=request.form['email'].upper()).first()
     username = User.query.filter_by(name=request.form['name'].upper()).first()
     if not username:
       if not useremail:
         if request.form['password'] == request.form['confirmpassword']:
           hashed_password = bcrypt.generate_password_hash(
-            request.form['password'])
+              request.form['password'])
 
           # new_user = User(user_name=request.form['name'],
           #                 user_phone=request.form['phonenumber'],
@@ -1410,10 +1427,10 @@ def registration():
           #                 user_active = True )
 
           user_data = {
-            'name': request.form['name'],
-            'phone': request.form['phonenumber'],
-            'email': request.form['email'],
-            'password': hashed_password.decode("utf-8")
+              'name': request.form['name'],
+              'phone': request.form['phonenumber'],
+              'email': request.form['email'],
+              'password': hashed_password.decode("utf-8")
           }
           # user_auth = json.dumps(dict(new_user))
           # json_string = new_user.toJSON()
@@ -1425,7 +1442,7 @@ def registration():
 
           link = url_for('verify_email', token=token, _external=True)
           msg.body = "Dear " + request.form[
-            'name'] + ",\n\nKindly click the link below to verify your account.\n\n" + link + "\n\nRegards,\nTE-Foodies"
+              'name'] + ",\n\nKindly click the link below to verify your account.\n\n" + link + "\n\nRegards,\nTE-Foodies"
           mail.send(msg)
 
           # session['data'] = new_user
@@ -1448,13 +1465,13 @@ def verify_email(token):
 
     random_pattern = generate_random_pattern(5)
     random_pattern_exists = User.query.filter_by(
-      random_pattern=random_pattern).first()
+        random_pattern=random_pattern).first()
 
     while random_pattern_exists is not None:
       # If the random pattern already exists, generate a new one
       random_pattern = generate_random_pattern(5)
       random_pattern_exists = User.query.filter_by(
-        random_pattern=random_pattern).first()
+          random_pattern=random_pattern).first()
     # print(bytes(token_user['user_password'], 'utf-8'))
     new_user = User(name=token_user['name'],
                     phone=token_user['phone'],

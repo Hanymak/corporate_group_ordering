@@ -20,6 +20,7 @@ telebot = "^0.0.5"
 itsdangerous = "^2.2.0"
 pytelegrambotapi = "^4.27.0"
 pymysql = "^1.1.1"
+requests = "^2.32.4"
 
 [tool.poetry.dev-dependencies]
 
